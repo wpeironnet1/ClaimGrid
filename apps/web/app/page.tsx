@@ -37,7 +37,7 @@ export default function Home() {
           <span className="stepLabel">AREA WORKSPACE</span><h2>Build an evidence trail before you drive.</h2>
           <p>Save coordinates, inspect official claim records, track when each source was checked, and export a field packet.</p>
           <ul><li>BLM active-claim overlay</li><li>Withdrawal and ownership checks</li><li>County + state requirements</li><li>Offline field notes</li></ul>
-          <a className="darkButton" href="/explore">Start research</a>
+          <a className="darkButton" href="/claim/new">Start a claim project</a>
         </aside>
       </section>
 
