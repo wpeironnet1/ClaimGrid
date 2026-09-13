@@ -33,6 +33,7 @@ export const BLM_ACTIVE_CLAIMS_SERVICE =
   "https://gis.blm.gov/nlsdb/rest/services/Mining_Claims/MiningClaims/MapServer/1";
 
 export * from "./blm";
+export * from "./research";
 
 export function calculateFederalDeadline(locationDate: string): string {
   const date = new Date(`${locationDate}T12:00:00Z`);
