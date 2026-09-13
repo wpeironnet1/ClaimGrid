@@ -62,6 +62,7 @@ export default function ClaimIntake() {
             <div className="statusBadge">{saved.stage === "research" ? "RESEARCH — NO RIGHTS CREATED" : "LOCATION DATE RECORDED"}</div>
             <dl><div><dt>Project</dt><dd>{saved.name}</dd></div><div><dt>Jurisdiction</dt><dd>{saved.county ? `${saved.county} County, ` : ""}{saved.state}</dd></div>{saved.federalRecordingDeadline && <div className="deadline"><dt>Federal 90-day deadline</dt><dd>{saved.federalRecordingDeadline}</dd></div>}</dl>
             {saved.federalRecordingDeadline && <p className="deadlineWarning"><b>Do not treat this as your first deadline.</b> State or county recording can be required sooner. Confirm the applicable rules immediately.</p>}
+            {saved.state === "NV" && <a className="workflowLink" href="/claim/nevada">Open Nevada verification checklist →</a>}
           </> : <ol><li>Save the jurisdiction and present stage.</li><li>Research official land and mineral records.</li><li>Verify conditions and monuments in the field.</li><li>Follow state, county, and BLM requirements.</li></ol>}
           <div className="officialBox"><b>Authoritative verification required</b><p>ClaimGrid cannot determine legal availability or validate a discovery. Confirm the current record directly with the responsible agencies.</p><a href="https://www.blm.gov/programs/energy-and-minerals/mining-and-minerals/locatable-minerals/mining-claims" target="_blank" rel="noreferrer">Review BLM mining-claim guidance ↗</a></div>
         </aside>
