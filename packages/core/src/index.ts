@@ -35,6 +35,7 @@ export const BLM_ACTIVE_CLAIMS_SERVICE =
 export * from "./blm";
 export * from "./research";
 export * from "./claim-draft";
+export * from "./state-workflows";
 
 export function calculateFederalDeadline(locationDate: string): string {
   const date = new Date(`${locationDate}T12:00:00Z`);
