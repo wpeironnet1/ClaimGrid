@@ -3,6 +3,7 @@ const assert = require("node:assert/strict");
 const { buildActiveClaimsQuery, validateResearchBounds } = require("../dist/blm.js");
 const { createResearchSnapshot, parseResearchSnapshots, upsertResearchSnapshot } = require("../dist/research.js");
 const { createClaimDraft, parseClaimDraft } = require("../dist/claim-draft.js");
+const { nevadaWorkflow, parseWorkflowProgress } = require("../dist/state-workflows.js");
 test("accepts a bounded US viewport", () => assert.equal(validateResearchBounds({ west: -120, south: 38, east: -119, north: 39 }).ok, true));
 test("rejects an oversized request", () => assert.match(validateResearchBounds({ west: -125, south: 30, east: -110, north: 40 }).error, /five degrees/i));
 test("builds a constrained GeoJSON query", () => { const url = buildActiveClaimsQuery({ west: -120, south: 38, east: -119, north: 39 }); assert.equal(url.searchParams.get("f"), "geojson"); assert.equal(url.searchParams.get("resultRecordCount"), "1000"); assert.match(url.searchParams.get("outFields"), /QLTY/); });
@@ -13,3 +14,6 @@ test("keeps research drafts separate from legal location", () => { const draft =
 test("calculates the federal recording target from physical location", () => { const draft = createClaimDraft({ name: "North wash", state: "NV", county: "Nye", claimType: "placer", stage: "located", locationDate: "2026-09-01" }, new Date("2026-09-13T18:00:00.000Z")); assert.equal(draft.federalRecordingDeadline, "2026-11-30"); });
 test("rejects future physical location dates", () => assert.throws(() => createClaimDraft({ name: "Test", state: "NV", county: "", claimType: "lode", stage: "located", locationDate: "2026-09-14" }, new Date("2026-09-13T18:00:00.000Z")), /future/i));
 test("ignores malformed persisted claim drafts", () => assert.equal(parseClaimDraft('{"version":1}'), null));
+test("Nevada workflow keeps authoritative source review dates", () => { assert.equal(nevadaWorkflow.state, "NV"); assert.ok(nevadaWorkflow.sources.every(source => source.checkedAt === "2026-09-13")); assert.match(nevadaWorkflow.notice, /does not determine/i); });
+test("workflow progress accepts only known unique step identifiers", () => assert.deepEqual(parseWorkflowProgress('["records","fake","records","county"]', nevadaWorkflow.steps.map(step => step.id)), ["records", "county"]));
+test("workflow progress safely rejects malformed storage", () => assert.deepEqual(parseWorkflowProgress("bad json", ["records"]), []));
