@@ -1,0 +1,14 @@
+{
+  "name": "claimgrid",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "npm@10.8.2",
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "dev:web": "npm run dev -w @claimgrid/web",
+    "dev:mobile": "npm run start -w @claimgrid/mobile",
+    "build": "npm run build -w @claimgrid/core && npm run build -w @claimgrid/web",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  }
+}
+
