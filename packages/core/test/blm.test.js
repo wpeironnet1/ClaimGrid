@@ -1,6 +1,10 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const { buildActiveClaimsQuery, validateResearchBounds } = require("../dist/blm.js");
+const { createResearchSnapshot, parseResearchSnapshots, upsertResearchSnapshot } = require("../dist/research.js");
 test("accepts a bounded US viewport", () => assert.equal(validateResearchBounds({ west: -120, south: 38, east: -119, north: 39 }).ok, true));
 test("rejects an oversized request", () => assert.match(validateResearchBounds({ west: -125, south: 30, east: -110, north: 40 }).error, /five degrees/i));
 test("builds a constrained GeoJSON query", () => { const url = buildActiveClaimsQuery({ west: -120, south: 38, east: -119, north: 39 }); assert.equal(url.searchParams.get("f"), "geojson"); assert.equal(url.searchParams.get("resultRecordCount"), "1000"); assert.match(url.searchParams.get("outFields"), /QLTY/); });
+test("creates an explicitly screening-only research snapshot", () => { const snapshot = createResearchSnapshot({ label: "Test Area", bounds: { west: -120, south: 38, east: -119, north: 39 }, activeClaimCount: 12, sourceCheckedAt: "2026-09-13T17:00:00.000Z" }, new Date("2026-09-13T18:00:00.000Z")); assert.equal(snapshot.screeningOnly, true); assert.equal(snapshot.savedAt, "2026-09-13T18:00:00.000Z"); });
+test("ignores malformed persisted research data", () => assert.deepEqual(parseResearchSnapshots("not json"), []));
+test("updates matching areas instead of duplicating them", () => { const snapshot = createResearchSnapshot({ label: "Test", bounds: { west: -120, south: 38, east: -119, north: 39 }, activeClaimCount: 1, sourceCheckedAt: "2026-09-13T17:00:00.000Z" }); assert.equal(upsertResearchSnapshot([snapshot], { ...snapshot, activeClaimCount: 2 }).length, 1); });
