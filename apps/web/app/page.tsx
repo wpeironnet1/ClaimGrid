@@ -19,7 +19,7 @@ export default function Home() {
         <div className="eyebrow">The modern field guide to mineral claims</div>
         <h1>Find your ground.<br/><em>Know the process.</em></h1>
         <p>Research federal mineral lands, prepare for the field, and keep every deadline and document organized in one place.</p>
-        <div className="actions"><button className="primary">Open the map <span>↗</span></button><a href="#process">See how it works</a></div>
+        <div className="actions"><a className="primary" href="/explore">Open the live map <span>↗</span></a><a href="#process">See how it works</a></div>
         <div className="trust"><span>Official-source overlays</span><span>State-aware checklists</span><span>Field-ready workflow</span></div>
       </section>
 
@@ -37,7 +37,7 @@ export default function Home() {
           <span className="stepLabel">AREA WORKSPACE</span><h2>Build an evidence trail before you drive.</h2>
           <p>Save coordinates, inspect official claim records, track when each source was checked, and export a field packet.</p>
           <ul><li>BLM active-claim overlay</li><li>Withdrawal and ownership checks</li><li>County + state requirements</li><li>Offline field notes</li></ul>
-          <button className="darkButton">Start research</button>
+          <a className="darkButton" href="/explore">Start research</a>
         </aside>
       </section>
 
@@ -61,4 +61,3 @@ export default function Home() {
     </main>
   );
 }
-
