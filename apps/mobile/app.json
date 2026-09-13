@@ -1,0 +1,13 @@
+{
+  "expo": {
+    "name": "ClaimGrid",
+    "slug": "claimgrid",
+    "scheme": "claimgrid",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "ios": {"supportsTablet": true, "bundleIdentifier": "com.claimgrid.app"},
+    "android": {"package": "com.claimgrid.app"},
+    "plugins": ["expo-router", "expo-location"]
+  }
+}
+
