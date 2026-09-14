@@ -4,7 +4,7 @@ const { buildActiveClaimsQuery, validateResearchBounds } = require("../dist/blm.
 const { createResearchSnapshot, parseResearchSnapshots, upsertResearchSnapshot } = require("../dist/research.js");
 const { createClaimDraft, parseClaimDraft } = require("../dist/claim-draft.js");
 const { nevadaWorkflow, parseWorkflowProgress } = require("../dist/state-workflows.js");
-const { createFieldObservation, describeGpsQuality } = require("../dist/field-record.js");
+const { addFieldObservation, createFieldObservation, describeGpsQuality, parseFieldObservations } = require("../dist/field-record.js");
 test("accepts a bounded US viewport", () => assert.equal(validateResearchBounds({ west: -120, south: 38, east: -119, north: 39 }).ok, true));
 test("rejects an oversized request", () => assert.match(validateResearchBounds({ west: -125, south: 30, east: -110, north: 40 }).error, /five degrees/i));
 test("builds a constrained GeoJSON query", () => { const url = buildActiveClaimsQuery({ west: -120, south: 38, east: -119, north: 39 }); assert.equal(url.searchParams.get("f"), "geojson"); assert.equal(url.searchParams.get("resultRecordCount"), "1000"); assert.match(url.searchParams.get("outFields"), /QLTY/); });
@@ -21,3 +21,5 @@ test("workflow progress safely rejects malformed storage", () => assert.deepEqua
 test("creates an explicitly device-only field observation", () => { const record = createFieldObservation({ kind: "monument", note: "  Existing post  ", latitude: 38.9, longitude: -119.7, horizontalAccuracyMeters: 7, capturedAt: "2026-09-14T01:00:00.000Z" }, "field-test"); assert.equal(record.note, "Existing post"); assert.equal(record.deviceReadingOnly, true); assert.equal(record.id, "field-test"); });
 test("rejects impossible field coordinates", () => assert.throws(() => createFieldObservation({ kind: "site", latitude: 100, longitude: -119 }), /latitude/i));
 test("classifies GPS readings without overstating precision", () => { assert.equal(describeGpsQuality(8), "strong"); assert.equal(describeGpsQuality(24), "moderate"); assert.equal(describeGpsQuality(80), "weak"); assert.equal(describeGpsQuality(null), "unknown"); });
+test("rejects corrupted and non-evidence field storage", () => { assert.deepEqual(parseFieldObservations("broken"), []); assert.deepEqual(parseFieldObservations('[{"id":"fake","latitude":38,"longitude":-119,"capturedAt":"2026-09-14T01:00:00Z"}]'), []); });
+test("deduplicates field records and keeps newest first", () => { const old = createFieldObservation({ kind: "site", latitude: 38, longitude: -119 }, "same"); const replacement = { ...old, note: "updated" }; assert.deepEqual(addFieldObservation([old], replacement), [replacement]); });
