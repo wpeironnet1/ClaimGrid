@@ -8,6 +8,7 @@ const { addFieldObservation, createFieldEvidenceExport, createFieldObservation, 
 const { createTrackedDeadline, daysUntilDeadline, deadlineStatus, parseTrackedDeadlines } = require("../dist/deadline.js");
 const { parseNevadaPacket, reviewNevadaPacket } = require("../dist/document-packet.js");
 const { webSecurityHeaders } = require("../dist/security.js");
+const { claimGridLocalRecords, collectLocalRecords, createLocalDataExport } = require("../dist/local-data.js");
 test("accepts a bounded US viewport", () => assert.equal(validateResearchBounds({ west: -120, south: 38, east: -119, north: 39 }).ok, true));
 test("rejects an oversized request", () => assert.match(validateResearchBounds({ west: -125, south: 30, east: -110, north: 40 }).error, /five degrees/i));
 test("builds a constrained GeoJSON query", () => { const url = buildActiveClaimsQuery({ west: -120, south: 38, east: -119, north: 39 }); assert.equal(url.searchParams.get("f"), "geojson"); assert.equal(url.searchParams.get("resultRecordCount"), "1000"); assert.match(url.searchParams.get("outFields"), /QLTY/); });
@@ -36,3 +37,7 @@ test("safely rejects malformed packet drafts", () => assert.equal(parseNevadaPac
 test("defines each production security header once", () => { const names=webSecurityHeaders.map(header=>header.key.toLowerCase()); assert.equal(new Set(names).size,names.length); assert.ok(names.includes("content-security-policy")); assert.ok(names.includes("strict-transport-security")); });
 test("prevents framing and insecure active content", () => { const csp=webSecurityHeaders.find(header=>header.key==="Content-Security-Policy").value; assert.match(csp,/frame-ancestors 'none'/); assert.match(csp,/object-src 'none'/); assert.match(csp,/upgrade-insecure-requests/); });
 test("denies unused sensitive browser capabilities", () => { const policy=webSecurityHeaders.find(header=>header.key==="Permissions-Policy").value; assert.match(policy,/camera=\(\)/); assert.match(policy,/geolocation=\(\)/); assert.match(policy,/microphone=\(\)/); assert.match(policy,/payment=\(\)/); });
+
+test("collects only known ClaimGrid browser records", () => { const values={ "claimgrid.research-areas.v1":"[]", "unrelated.secret":"nope" }; const found=collectLocalRecords(key=>values[key]??null); assert.equal(found.length,1); assert.equal(found[0].key,"claimgrid.research-areas.v1"); });
+test("creates a versioned exact-value local data export", () => { const records=[{ key:"claimgrid.claim-draft.v1",label:"Claim project draft",value:"{\\\"name\\\":\\\"Test\\\"}" }]; const packet=createLocalDataExport(records,new Date("2026-09-14T15:00:00Z")); assert.equal(packet.schema,"claimgrid-local-data-v1"); assert.equal(packet.exportedAt,"2026-09-14T15:00:00.000Z"); assert.deepEqual(packet.records,records); });
+test("keeps a unique registry for every browser record type", () => { const keys=claimGridLocalRecords.map(record=>record.key); assert.equal(new Set(keys).size,keys.length); assert.ok(keys.every(key=>key.startsWith("claimgrid."))); });

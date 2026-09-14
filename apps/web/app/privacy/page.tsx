@@ -1,0 +1,7 @@
+import type { Metadata } from "next";
+import LocalDataManager from "./LocalDataManager";
+import "./privacy.css";
+
+export const metadata: Metadata = { title: "Privacy & local data — ClaimGrid", description: "Review, export, or delete ClaimGrid records stored in this browser." };
+
+export default function PrivacyPage(){return <main className="privacyPage"><nav><a className="privacyBrand" href="/"><span>CG</span>ClaimGrid</a><a href="/">Back home</a></nav><div className="privacyShell"><header><span>PRIVACY CONTROL CENTER</span><h1>Your research stays under your control.</h1><p>ClaimGrid currently stores web research and filing-organizer drafts in your browser. Review what is present, make a portable backup, or erase it.</p></header><div className="privacyNotice"><b>Device-specific storage</b><p>Clearing browser data, changing devices, or using private browsing can remove these records. A JSON backup preserves the exact stored values but is not an official filing, legal record, or proof of a claim.</p></div><LocalDataManager/><section className="privacyCopy"><h2>Current privacy boundary</h2><p>No ClaimGrid account or cloud synchronization is active in this version. The live map request sends the selected bounding box to ClaimGrid’s server so it can query the official BLM service; saved areas and document drafts remain local to this browser.</p><p>Field photos and GPS observations created in the mobile companion remain on that device unless the user explicitly shares an export.</p></section></div></main>}

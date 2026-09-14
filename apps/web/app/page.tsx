@@ -57,7 +57,7 @@ export default function Home() {
         <div className="priceCard"><small>CLAIMGRID PRO</small><div><strong>$19</strong><span>/ month</span></div><p>Planned launch pricing</p><button className="primary">Join early access</button></div>
       </section>
 
-      <footer className="shell"><a className="brand" href="#top"><span className="brandMark">CG</span>ClaimGrid</a><p>Research tools, not legal advice. Always verify with BLM, the county, the state, and conditions on the ground.</p></footer>
+      <footer className="shell"><a className="brand" href="#top"><span className="brandMark">CG</span>ClaimGrid</a><p>Research tools, not legal advice. Always verify with BLM, the county, the state, and conditions on the ground.</p><a href="/privacy">Privacy & local data</a></footer>
     </main>
   );
 }
