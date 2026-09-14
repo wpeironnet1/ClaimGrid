@@ -16,7 +16,7 @@ export default function NevadaChecklist() {
     setCompleted(next); localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
   }
   return <main className="nvPage">
-    <nav className="nvNav"><a className="nvBrand" href="/"><span>CG</span>ClaimGrid</a><div><a href="/explore">Map</a><a href="/claim/new">Project intake</a></div></nav>
+    <nav className="nvNav"><a className="nvBrand" href="/"><span>CG</span>ClaimGrid</a><div><a href="/explore">Map</a><a href="/claim/new">Project intake</a><a href="/documents/nevada">Document worksheet</a></div></nav>
     <div className="nvShell">
       <header><span>STATE WORKFLOW · SOURCE REVIEWED {nevadaWorkflow.reviewedAt}</span><h1>{nevadaWorkflow.title}</h1><p>{nevadaWorkflow.notice}</p></header>
       <section className="progress" aria-live="polite"><div><b>{loaded ? completed.length : 0} of {nevadaWorkflow.steps.length}</b><span>verification gates marked</span></div><div className="progressTrack"><i style={{width: `${(completed.length / nevadaWorkflow.steps.length) * 100}%`}} /></div></section>
