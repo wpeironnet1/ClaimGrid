@@ -6,6 +6,7 @@ export const claimGridLocalRecords: readonly LocalRecordDefinition[] = [
   { key: "claimgrid.research-areas.v1", label: "Saved research areas", description: "Map bounds, source timestamps, and mapped-record counts." },
   { key: "claimgrid.claim-draft.v1", label: "Claim project draft", description: "Project intake, location date, and federal deadline target." },
   { key: "claimgrid.workflow.nv.v1", label: "Nevada workflow progress", description: "Completed Nevada verification gates." },
+  { key: "claimgrid.workflow.az.v1", label: "Arizona workflow progress", description: "Completed Arizona verification gates." },
   { key: "claimgrid.deadlines.v1", label: "Tracked deadlines", description: "Federal and source-confirmed county filing dates." },
   { key: "claimgrid.nevada-packet.v1", label: "Nevada document worksheet", description: "Locators, land description, and map cross-checks." }
 ] as const;

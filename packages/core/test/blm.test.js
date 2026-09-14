@@ -3,7 +3,7 @@ const assert = require("node:assert/strict");
 const { buildActiveClaimsQuery, validateResearchBounds } = require("../dist/blm.js");
 const { createResearchSnapshot, parseResearchSnapshots, upsertResearchSnapshot } = require("../dist/research.js");
 const { createClaimDraft, parseClaimDraft } = require("../dist/claim-draft.js");
-const { nevadaWorkflow, parseWorkflowProgress } = require("../dist/state-workflows.js");
+const { arizonaWorkflow, nevadaWorkflow, parseWorkflowProgress } = require("../dist/state-workflows.js");
 const { addFieldObservation, createFieldEvidenceExport, createFieldObservation, describeGpsQuality, parseFieldObservations, serializeFieldEvidence } = require("../dist/field-record.js");
 const { createTrackedDeadline, daysUntilDeadline, deadlineStatus, parseTrackedDeadlines } = require("../dist/deadline.js");
 const { parseNevadaPacket, reviewNevadaPacket } = require("../dist/document-packet.js");
@@ -41,3 +41,7 @@ test("denies unused sensitive browser capabilities", () => { const policy=webSec
 test("collects only known ClaimGrid browser records", () => { const values={ "claimgrid.research-areas.v1":"[]", "unrelated.secret":"nope" }; const found=collectLocalRecords(key=>values[key]??null); assert.equal(found.length,1); assert.equal(found[0].key,"claimgrid.research-areas.v1"); });
 test("creates a versioned exact-value local data export", () => { const records=[{ key:"claimgrid.claim-draft.v1",label:"Claim project draft",value:"{\\\"name\\\":\\\"Test\\\"}" }]; const packet=createLocalDataExport(records,new Date("2026-09-14T15:00:00Z")); assert.equal(packet.schema,"claimgrid-local-data-v1"); assert.equal(packet.exportedAt,"2026-09-14T15:00:00.000Z"); assert.deepEqual(packet.records,records); });
 test("keeps a unique registry for every browser record type", () => { const keys=claimGridLocalRecords.map(record=>record.key); assert.equal(new Set(keys).size,keys.length); assert.ok(keys.every(key=>key.startsWith("claimgrid."))); });
+
+test("Arizona workflow separates State Trust Land from federal claims", () => { assert.equal(arizonaWorkflow.state,"AZ"); assert.match(arizonaWorkflow.notice,/State Trust Land/i); assert.ok(arizonaWorkflow.steps.some(step=>/State Trust Land/i.test(step.title))); });
+test("Arizona workflow uses freshly reviewed authoritative sources", () => { assert.ok(arizonaWorkflow.sources.every(source=>source.checkedAt==="2026-09-14")); assert.ok(arizonaWorkflow.sources.some(source=>source.authority==="Arizona Legislature")); assert.ok(arizonaWorkflow.sources.every(source=>source.url.startsWith("https://"))); });
+test("Arizona progress rejects Nevada and unknown gate identifiers", () => { const ids=arizonaWorkflow.steps.map(step=>step.id); assert.deepEqual(parseWorkflowProgress('["az-records","records","fake","az-records"]',ids),["az-records"]); });
