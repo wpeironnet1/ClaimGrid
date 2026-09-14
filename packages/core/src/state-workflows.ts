@@ -67,6 +67,29 @@ export const arizonaWorkflow: StateWorkflow = {
   ]
 };
 
+
+export const californiaWorkflow: StateWorkflow = {
+  state: "CA",
+  title: "California claim-location research checklist",
+  reviewedAt: "2026-09-14",
+  notice: "This checklist organizes official sources; it does not determine mineral-entry status, validate discovery, authorize surface disturbance, or certify compliance. Federal ownership alone does not mean land is open to mineral entry.",
+  steps: [
+    { id: "ca-status", phase: "research", title: "Verify land and mineral-entry status", description: "Identify the legal description, surface manager, mineral estate, existing claims, withdrawals, closures, and special-area restrictions using current BLM title and case records. An empty map area is not proof that land is open.", verification: "Save source dates and confirm uncertain status with the responsible BLM field or state office." },
+    { id: "ca-access", phase: "research", title: "Check access and surface-use authorization", description: "Determine whether the parcel is managed by BLM, the Forest Service, another agency, or a nonfederal owner. Claim location does not itself authorize entry across private land or mining operations and surface disturbance.", verification: "Contact the surface-management agency before entry or disturbance; separate notices or plans may be required." },
+    { id: "ca-county", phase: "research", title: "Confirm county and claim-type rules", description: "Identify every county containing the proposed claim and review current California Public Resources Code requirements for the applicable lode, placer, millsite, or tunnel right, together with recorder formatting, fee, and submission rules.", verification: "Confirm the current deadline and document standards directly with each applicable county recorder." },
+    { id: "ca-field", phase: "field", title: "Inspect the site and discovery evidence", description: "Check access, existing monuments, conflicting occupation, protected resources, and evidence of a valuable locatable mineral before treating the project as a location.", verification: "Online screening and phone GPS cannot establish discovery, boundaries, or legal availability." },
+    { id: "ca-location", phase: "field", title: "Post, mark, and document the location", description: "Follow the current California method for the claim type. Preserve the actual posting and location dates, notice details, boundary or monument evidence, legal description, coordinates, and photographs without disturbing protected resources.", verification: "Compare the field plan with current Public Resources Code sections 3900–3924 immediately before acting." },
+    { id: "ca-record", phase: "county", title: "Record with the county", description: "Prepare and record the required notice and map or description in the appropriate county within the applicable California deadline. Make sure the recorded information agrees with the physical location.", verification: "Retain the recorder-stamped copy, receipt, document number, and evidence of timely delivery." },
+    { id: "ca-blm", phase: "federal", title: "Record with BLM", description: "File the required location notice or certificate, map, claimant information, and current fees with BLM within 90 days after physical location, even if a state deadline is sooner.", verification: "Confirm BLM receipt, assigned serial number, and the resulting MLRS record; filing does not cure an invalid location." }
+  ],
+  sources: [
+    { label: "California Public Resources Code — Division 3.5", authority: "California Legislature", checkedAt: "2026-09-14", url: "https://leginfo.legislature.ca.gov/faces/codes_displayexpandedbranch.xhtml?tocCode=PRC&division=3.5." },
+    { label: "BLM — Recording a Mining Claim or Site", authority: "U.S. Bureau of Land Management", checkedAt: "2026-09-14", url: "https://www.blm.gov/programs/energy-and-minerals/mining-and-minerals/locatable-minerals/mining-claims/recording" },
+    { label: "Electronic Code of Federal Regulations — 43 CFR Part 3833", authority: "U.S. Government Publishing Office", checkedAt: "2026-09-14", url: "https://www.ecfr.gov/current/title-43/subtitle-B/chapter-II/subchapter-C/part-3830/subpart-3833" },
+    { label: "Mineral & Land Records System", authority: "U.S. Bureau of Land Management", checkedAt: "2026-09-14", url: "https://mlrs.blm.gov/" }
+  ]
+};
+
 export function parseWorkflowProgress(raw: string | null, allowedIds: readonly string[]): string[] {
   if (!raw) return [];
   try {

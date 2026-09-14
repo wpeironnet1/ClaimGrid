@@ -64,6 +64,7 @@ export default function ClaimIntake() {
             {saved.federalRecordingDeadline && <p className="deadlineWarning"><b>Do not treat this as your first deadline.</b> State or county recording can be required sooner. Confirm the applicable rules immediately.</p>}
             {saved.state === "NV" && <a className="workflowLink" href="/claim/nevada">Open Nevada verification checklist →</a>}
             {saved.state === "AZ" && <a className="workflowLink" href="/claim/arizona">Open Arizona verification checklist →</a>}
+            {saved.state === "CA" && <a className="workflowLink" href="/claim/california">Open California verification checklist →</a>}
             {saved.federalRecordingDeadline && <a className="workflowLink" href="/deadlines">Open deadline tracker →</a>}
           </> : <ol><li>Save the jurisdiction and present stage.</li><li>Research official land and mineral records.</li><li>Verify conditions and monuments in the field.</li><li>Follow state, county, and BLM requirements.</li></ol>}
           <div className="officialBox"><b>Authoritative verification required</b><p>ClaimGrid cannot determine legal availability or validate a discovery. Confirm the current record directly with the responsible agencies.</p><a href="https://www.blm.gov/programs/energy-and-minerals/mining-and-minerals/locatable-minerals/mining-claims" target="_blank" rel="noreferrer">Review BLM mining-claim guidance ↗</a></div>
