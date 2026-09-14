@@ -70,3 +70,25 @@ export function parseFieldObservations(raw: string | null): FieldObservation[] {
 export function addFieldObservation(records: readonly FieldObservation[], record: FieldObservation): FieldObservation[] {
   return [record, ...records.filter(existing => existing.id !== record.id)].slice(0, 250);
 }
+
+export interface FieldEvidenceExport {
+  schema: "claimgrid-field-evidence-v1";
+  exportedAt: string;
+  caveat: string;
+  observations: FieldObservation[];
+}
+
+export const FIELD_EVIDENCE_CAVEAT = "Device observations are not a legal survey, claim corner, mineral discovery, land-status determination, or proof of rights. Verify against authoritative records and field requirements.";
+
+export function createFieldEvidenceExport(records: readonly FieldObservation[], now = new Date()): FieldEvidenceExport {
+  return {
+    schema: "claimgrid-field-evidence-v1",
+    exportedAt: now.toISOString(),
+    caveat: FIELD_EVIDENCE_CAVEAT,
+    observations: records.slice(0, 250).map(record => ({ ...record, deviceReadingOnly: true }))
+  };
+}
+
+export function serializeFieldEvidence(records: readonly FieldObservation[], now = new Date()): string {
+  return JSON.stringify(createFieldEvidenceExport(records, now), null, 2);
+}
