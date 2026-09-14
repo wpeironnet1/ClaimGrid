@@ -5,9 +5,8 @@
     "scheme": "claimgrid",
     "version": "0.1.0",
     "orientation": "portrait",
-    "ios": {"supportsTablet": true, "bundleIdentifier": "com.claimgrid.app"},
+    "ios": {"supportsTablet": true, "bundleIdentifier": "com.claimgrid.app", "infoPlist": {"NSLocationWhenInUseUsageDescription": "ClaimGrid uses your location only when you capture a field observation."}},
     "android": {"package": "com.claimgrid.app"},
     "plugins": ["expo-router", "expo-location"]
   }
 }
-
