@@ -7,6 +7,6 @@
     "orientation": "portrait",
     "ios": {"supportsTablet": true, "bundleIdentifier": "com.claimgrid.app", "infoPlist": {"NSLocationWhenInUseUsageDescription": "ClaimGrid uses your location only when you capture a field observation."}},
     "android": {"package": "com.claimgrid.app"},
-    "plugins": ["expo-router", "expo-location"]
+    "plugins": ["expo-router", "expo-location", ["expo-image-picker", {"cameraPermission": "ClaimGrid opens the camera only when you add a photo to a field observation.", "photosPermission": false}]]
   }
 }
