@@ -41,6 +41,7 @@ export * from "./deadline";
 export * from "./document-packet";
 export * from "./security";
 export * from "./local-data";
+export * from "./billing";
 
 export function calculateFederalDeadline(locationDate: string): string {
   const date = new Date(`${locationDate}T12:00:00Z`);

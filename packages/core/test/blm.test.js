@@ -9,6 +9,7 @@ const { createTrackedDeadline, daysUntilDeadline, deadlineStatus, parseTrackedDe
 const { parseNevadaPacket, reviewNevadaPacket } = require("../dist/document-packet.js");
 const { webSecurityHeaders } = require("../dist/security.js");
 const { claimGridLocalRecords, collectLocalRecords, createLocalDataExport, parseLocalDataExport } = require("../dist/local-data.js");
+const { billingConfiguration, parseBillingPlan } = require("../dist/billing.js");
 test("accepts a bounded US viewport", () => assert.equal(validateResearchBounds({ west: -120, south: 38, east: -119, north: 39 }).ok, true));
 test("rejects an oversized request", () => assert.match(validateResearchBounds({ west: -125, south: 30, east: -110, north: 40 }).error, /five degrees/i));
 test("builds a constrained GeoJSON query", () => { const url = buildActiveClaimsQuery({ west: -120, south: 38, east: -119, north: 39 }); assert.equal(url.searchParams.get("f"), "geojson"); assert.equal(url.searchParams.get("resultRecordCount"), "1000"); assert.match(url.searchParams.get("outFields"), /QLTY/); });
@@ -67,3 +68,7 @@ test("California progress rejects other-state and unknown gates", () => { const 
 
 test("accepts a custom research viewport anywhere in the supported US extent", () => { const result=validateResearchBounds({west:"-106.5",south:"38.5",east:"-104.5",north:"40.5"}); assert.equal(result.ok,true); assert.equal(result.bounds.west,-106.5); });
 test("rejects custom viewports outside the supported extent or with reversed edges", () => { assert.equal(validateResearchBounds({west:-190,south:30,east:-189,north:31}).ok,false); assert.equal(validateResearchBounds({west:-110,south:40,east:-111,north:41}).ok,false); });
+
+
+test("billing accepts only explicit ClaimGrid plans", () => { assert.equal(parseBillingPlan("monthly"),"monthly"); assert.equal(parseBillingPlan("annual"),"annual"); assert.equal(parseBillingPlan("enterprise"),null); assert.equal(parseBillingPlan({}),null); });
+test("billing remains disabled until every server secret and price is valid", () => { assert.equal(billingConfiguration({}).ready,false); assert.equal(billingConfiguration({STRIPE_SECRET_KEY:"sk_live_valid123",STRIPE_PRO_MONTHLY_PRICE_ID:"price_monthly1",STRIPE_PRO_ANNUAL_PRICE_ID:"price_annual1"}).ready,true); assert.equal(billingConfiguration({STRIPE_SECRET_KEY:"pk_live_public",STRIPE_PRO_MONTHLY_PRICE_ID:"price_monthly1",STRIPE_PRO_ANNUAL_PRICE_ID:"price_annual1"}).ready,false); });

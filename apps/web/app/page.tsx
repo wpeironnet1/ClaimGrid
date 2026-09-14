@@ -11,7 +11,7 @@ export default function Home() {
     <main>
       <nav className="nav shell">
         <a className="brand" href="#top"><span className="brandMark">CG</span>ClaimGrid</a>
-        <div className="navLinks"><a href="#map">Explore</a><a href="#process">How it works</a><a href="#pricing">Pricing</a></div>
+        <div className="navLinks"><a href="#map">Explore</a><a href="#process">How it works</a><a href="/pricing">Pricing</a></div>
         <button className="quietButton">Sign in</button>
       </nav>
 
@@ -54,7 +54,7 @@ export default function Home() {
 
       <section id="pricing" className="pricing shell">
         <div><span className="stepLabel">BUILT FOR SERIOUS RESEARCH</span><h2>Explore free. Go Pro when you find promising ground.</h2><p>The core map and education stay accessible. Pro unlocks saved projects, document packets, offline field mode, deadline tracking, and monitored areas.</p></div>
-        <div className="priceCard"><small>CLAIMGRID PRO</small><div><strong>$19</strong><span>/ month</span></div><p>Planned launch pricing</p><button className="primary">Join early access</button></div>
+        <div className="priceCard"><small>CLAIMGRID PRO</small><div><strong>$19</strong><span>/ month</span></div><p>Planned launch pricing</p><a className="primary" href="/pricing">View plans</a></div>
       </section>
 
       <footer className="shell"><a className="brand" href="#top"><span className="brandMark">CG</span>ClaimGrid</a><p>Research tools, not legal advice. Always verify with BLM, the county, the state, and conditions on the ground.</p><a href="/privacy">Privacy & local data</a></footer>
