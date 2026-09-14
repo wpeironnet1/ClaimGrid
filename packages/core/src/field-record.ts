@@ -48,3 +48,25 @@ export function describeGpsQuality(accuracy: number | null): "unknown" | "strong
   if (accuracy <= 30) return "moderate";
   return "weak";
 }
+
+export function parseFieldObservations(raw: string | null): FieldObservation[] {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((record): record is FieldObservation =>
+      typeof record?.id === "string" &&
+      typeof record?.kind === "string" &&
+      typeof record?.latitude === "number" && record.latitude >= -90 && record.latitude <= 90 &&
+      typeof record?.longitude === "number" && record.longitude >= -180 && record.longitude <= 180 &&
+      typeof record?.capturedAt === "string" && !Number.isNaN(Date.parse(record.capturedAt)) &&
+      record.deviceReadingOnly === true
+    ).slice(0, 250);
+  } catch {
+    return [];
+  }
+}
+
+export function addFieldObservation(records: readonly FieldObservation[], record: FieldObservation): FieldObservation[] {
+  return [record, ...records.filter(existing => existing.id !== record.id)].slice(0, 250);
+}
