@@ -63,3 +63,7 @@ test("preserves an official upstream edit timestamp when provided", () => { cons
 test("California workflow preserves land-status and surface-use gates", () => { assert.equal(californiaWorkflow.state,"CA"); assert.match(californiaWorkflow.notice,/Federal ownership alone/i); assert.ok(californiaWorkflow.steps.some(step=>/surface-use/i.test(step.title))); });
 test("California workflow uses current authoritative sources", () => { assert.ok(californiaWorkflow.sources.every(source=>source.checkedAt==="2026-09-14")); assert.ok(californiaWorkflow.sources.some(source=>source.authority==="California Legislature")); assert.ok(californiaWorkflow.sources.every(source=>source.url.startsWith("https://"))); });
 test("California progress rejects other-state and unknown gates", () => { const ids=californiaWorkflow.steps.map(step=>step.id); assert.deepEqual(parseWorkflowProgress('["ca-status","az-records","fake","ca-status"]',ids),["ca-status"]); });
+
+
+test("accepts a custom research viewport anywhere in the supported US extent", () => { const result=validateResearchBounds({west:"-106.5",south:"38.5",east:"-104.5",north:"40.5"}); assert.equal(result.ok,true); assert.equal(result.bounds.west,-106.5); });
+test("rejects custom viewports outside the supported extent or with reversed edges", () => { assert.equal(validateResearchBounds({west:-190,south:30,east:-189,north:31}).ok,false); assert.equal(validateResearchBounds({west:-110,south:40,east:-111,north:41}).ok,false); });

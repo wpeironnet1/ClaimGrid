@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { createResearchSnapshot, parseResearchSnapshots, RESEARCH_STORAGE_VERSION, type SavedResearchArea, upsertResearchSnapshot } from "@claimgrid/core";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { createResearchSnapshot, parseResearchSnapshots, RESEARCH_STORAGE_VERSION, type Bounds, type SavedResearchArea, upsertResearchSnapshot, validateResearchBounds } from "@claimgrid/core";
 
 type Feature = { id?: string | number; geometry?: { type: string; coordinates: unknown } };
 type Result = { features: Feature[]; metadata: { retrievedAt: string; exceededLimit: boolean; warning: string } };
@@ -20,11 +20,14 @@ function rings(feature: Feature): number[][][] {
 
 export default function ClaimsExplorer() {
   const [areaId, setAreaId] = useState(areas[0].id);
+  const [customArea, setCustomArea] = useState<(Bounds & { id: string; label: string }) | null>(null);
+  const [customDraft, setCustomDraft] = useState({ label: "Custom research area", west: "-120", south: "38", east: "-119", north: "39" });
+  const [boundsError, setBoundsError] = useState("");
   const [result, setResult] = useState<Result | null>(null);
   const [saved, setSaved] = useState<SavedResearchArea[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
-  const area = useMemo(() => areas.find(item => item.id === areaId) ?? areas[0], [areaId]);
+  const area = useMemo(() => areaId === "custom" && customArea ? customArea : areas.find(item => item.id === areaId) ?? areas[0], [areaId, customArea]);
 
   useEffect(() => setSaved(parseResearchSnapshots(localStorage.getItem(STORAGE_KEY))), []);
   useEffect(() => {
@@ -42,6 +45,15 @@ export default function ClaimsExplorer() {
     return <path key={`${feature.id ?? featureIndex}-${ringIndex}`} d={d} />;
   })) ?? [], [area, result]);
 
+  function applyCustomArea(event: FormEvent) {
+    event.preventDefault();
+    const validation = validateResearchBounds(customDraft);
+    if (!validation.ok) { setBoundsError(validation.error); return; }
+    setBoundsError("");
+    setCustomArea({ ...validation.bounds, id: "custom", label: customDraft.label.trim() || "Custom research area" });
+    setAreaId("custom");
+  }
+
   function saveCurrentArea() {
     if (!result) return;
     const snapshot = createResearchSnapshot({ label: area.label, bounds: { west: area.west, south: area.south, east: area.east, north: area.north }, activeClaimCount: result.features.length, sourceCheckedAt: result.metadata.retrievedAt });
@@ -49,5 +61,5 @@ export default function ClaimsExplorer() {
   }
   function removeSaved(id: string) { const next = saved.filter(item => item.id !== id); setSaved(next); localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); }
 
-  return <><div className="explorerLayout"><section className="liveMap" aria-label={`BLM active mining claim screening layer for ${area.label}`}><div className="mapTop"><div><small>OFFICIAL-SOURCE SCREENING VIEW</small><strong>{area.label}</strong></div><label>Research area<select value={areaId} onChange={event => setAreaId(event.target.value)}>{areas.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label></div><div className="liveCanvas"><svg viewBox="0 0 1000 620" preserveAspectRatio="none"><defs><pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse"><path d="M 50 0 L 0 0 0 50" className="gridLine" /></pattern></defs><rect width="1000" height="620" fill="url(#grid)"/><g className="claimShapes">{paths}</g></svg>{loading && <div className="mapStatus">Loading the current BLM layer…</div>}{error && <div className="mapStatus error">{error}</div>}<div className="legend"><span><i/>Active claim geometry</span><span>BLM MLRS • not an availability map</span></div></div></section><aside className="resultPanel"><span className="stepLabel">LIVE RESULTS</span><h1>{loading ? "—" : result?.features.length ?? 0}</h1><h2>mapped active-claim records intersect this view</h2><p>This count reflects geometries returned by the current BLM service, not a count of legally available parcels.</p>{result && <><dl><div><dt>Source checked</dt><dd>{new Date(result.metadata.retrievedAt).toLocaleString()}</dd></div><div><dt>Result cap</dt><dd>{result.metadata.exceededLimit ? "Reached — zoom in" : "Not reached"}</dd></div></dl><div className="screeningWarning"><b>Required verification</b><span>{result.metadata.warning}</span></div><button className="saveAreaButton" onClick={saveCurrentArea}>Save evidence snapshot</button></>}<a className="darkButton explorerButton" href="https://mlrs.blm.gov/s/" target="_blank" rel="noreferrer">Verify in BLM MLRS ↗</a></aside></div><section className="savedResearch"><div><span className="stepLabel">SAVED RESEARCH</span><h2>Evidence snapshots</h2><p>Each save preserves the area, BLM record count, and the exact time the official source was checked.</p></div><div className="savedList">{saved.length === 0 ? <div className="emptySaved">No areas saved yet.</div> : saved.map(item => <article key={item.id}><div><b>{item.label}</b><span>{item.activeClaimCount} mapped records • checked {new Date(item.sourceCheckedAt).toLocaleString()}</span></div><button onClick={() => removeSaved(item.id)} aria-label={`Remove ${item.label}`}>Remove</button></article>)}</div></section></>;
+  return <><div className="explorerLayout"><section className="liveMap" aria-label={`BLM active mining claim screening layer for ${area.label}`}><div className="mapTop"><div><small>OFFICIAL-SOURCE SCREENING VIEW</small><strong>{area.label}</strong></div><label>Research area<select value={areaId} onChange={event => setAreaId(event.target.value)}>{areas.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}{customArea && <option value="custom">{customArea.label}</option>}</select></label></div><div className="liveCanvas"><svg viewBox="0 0 1000 620" preserveAspectRatio="none"><defs><pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse"><path d="M 50 0 L 0 0 0 50" className="gridLine" /></pattern></defs><rect width="1000" height="620" fill="url(#grid)"/><g className="claimShapes">{paths}</g></svg>{loading && <div className="mapStatus">Loading the current BLM layer…</div>}{error && <div className="mapStatus error">{error}</div>}<div className="legend"><span><i/>Active claim geometry</span><span>BLM MLRS • not an availability map</span></div></div><form className="customBounds" onSubmit={applyCustomArea}><div><b>Research anywhere in the United States</b><span>Enter a bounded screening viewport no larger than 5° × 5°.</span></div><label>Area name<input value={customDraft.label} onChange={event=>setCustomDraft({...customDraft,label:event.target.value})} maxLength={80}/></label>{(["west","south","east","north"] as const).map(key=><label key={key}>{key}<input type="number" step="any" required value={customDraft[key]} onChange={event=>setCustomDraft({...customDraft,[key]:event.target.value})}/></label>)}<button>Load area</button>{boundsError&&<p role="alert">{boundsError}</p>}</form></section><aside className="resultPanel"><span className="stepLabel">LIVE RESULTS</span><h1>{loading ? "—" : result?.features.length ?? 0}</h1><h2>mapped active-claim records intersect this view</h2><p>This count reflects geometries returned by the current BLM service, not a count of legally available parcels.</p>{result && <><dl><div><dt>Source checked</dt><dd>{new Date(result.metadata.retrievedAt).toLocaleString()}</dd></div><div><dt>Result cap</dt><dd>{result.metadata.exceededLimit ? "Reached — zoom in" : "Not reached"}</dd></div></dl><div className="screeningWarning"><b>Required verification</b><span>{result.metadata.warning}</span></div><button className="saveAreaButton" onClick={saveCurrentArea}>Save evidence snapshot</button></>}<a className="darkButton explorerButton" href="https://mlrs.blm.gov/s/" target="_blank" rel="noreferrer">Verify in BLM MLRS ↗</a></aside></div><section className="savedResearch"><div><span className="stepLabel">SAVED RESEARCH</span><h2>Evidence snapshots</h2><p>Each save preserves the area, BLM record count, and the exact time the official source was checked.</p></div><div className="savedList">{saved.length === 0 ? <div className="emptySaved">No areas saved yet.</div> : saved.map(item => <article key={item.id}><div><b>{item.label}</b><span>{item.activeClaimCount} mapped records • checked {new Date(item.sourceCheckedAt).toLocaleString()}</span></div><button onClick={() => removeSaved(item.id)} aria-label={`Remove ${item.label}`}>Remove</button></article>)}</div></section></>;
 }
