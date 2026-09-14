@@ -9,6 +9,7 @@ export interface FieldObservation {
   horizontalAccuracyMeters: number | null;
   altitudeMeters: number | null;
   capturedAt: string;
+  photoUri: string | null;
   deviceReadingOnly: true;
 }
 
@@ -20,6 +21,7 @@ export interface FieldObservationInput {
   horizontalAccuracyMeters?: number | null;
   altitudeMeters?: number | null;
   capturedAt?: string;
+  photoUri?: string | null;
 }
 
 export function createFieldObservation(input: FieldObservationInput, id = `field-${Date.now()}`): FieldObservation {
@@ -38,6 +40,7 @@ export function createFieldObservation(input: FieldObservationInput, id = `field
     horizontalAccuracyMeters: accuracy,
     altitudeMeters: input.altitudeMeters ?? null,
     capturedAt,
+    photoUri: input.photoUri?.trim() || null,
     deviceReadingOnly: true
   };
 }
