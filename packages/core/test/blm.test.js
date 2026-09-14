@@ -4,6 +4,7 @@ const { buildActiveClaimsQuery, validateResearchBounds } = require("../dist/blm.
 const { createResearchSnapshot, parseResearchSnapshots, upsertResearchSnapshot } = require("../dist/research.js");
 const { createClaimDraft, parseClaimDraft } = require("../dist/claim-draft.js");
 const { nevadaWorkflow, parseWorkflowProgress } = require("../dist/state-workflows.js");
+const { createFieldObservation, describeGpsQuality } = require("../dist/field-record.js");
 test("accepts a bounded US viewport", () => assert.equal(validateResearchBounds({ west: -120, south: 38, east: -119, north: 39 }).ok, true));
 test("rejects an oversized request", () => assert.match(validateResearchBounds({ west: -125, south: 30, east: -110, north: 40 }).error, /five degrees/i));
 test("builds a constrained GeoJSON query", () => { const url = buildActiveClaimsQuery({ west: -120, south: 38, east: -119, north: 39 }); assert.equal(url.searchParams.get("f"), "geojson"); assert.equal(url.searchParams.get("resultRecordCount"), "1000"); assert.match(url.searchParams.get("outFields"), /QLTY/); });
@@ -17,3 +18,6 @@ test("ignores malformed persisted claim drafts", () => assert.equal(parseClaimDr
 test("Nevada workflow keeps authoritative source review dates", () => { assert.equal(nevadaWorkflow.state, "NV"); assert.ok(nevadaWorkflow.sources.every(source => source.checkedAt === "2026-09-13")); assert.match(nevadaWorkflow.notice, /does not determine/i); });
 test("workflow progress accepts only known unique step identifiers", () => assert.deepEqual(parseWorkflowProgress('["records","fake","records","county"]', nevadaWorkflow.steps.map(step => step.id)), ["records", "county"]));
 test("workflow progress safely rejects malformed storage", () => assert.deepEqual(parseWorkflowProgress("bad json", ["records"]), []));
+test("creates an explicitly device-only field observation", () => { const record = createFieldObservation({ kind: "monument", note: "  Existing post  ", latitude: 38.9, longitude: -119.7, horizontalAccuracyMeters: 7, capturedAt: "2026-09-14T01:00:00.000Z" }, "field-test"); assert.equal(record.note, "Existing post"); assert.equal(record.deviceReadingOnly, true); assert.equal(record.id, "field-test"); });
+test("rejects impossible field coordinates", () => assert.throws(() => createFieldObservation({ kind: "site", latitude: 100, longitude: -119 }), /latitude/i));
+test("classifies GPS readings without overstating precision", () => { assert.equal(describeGpsQuality(8), "strong"); assert.equal(describeGpsQuality(24), "moderate"); assert.equal(describeGpsQuality(80), "weak"); assert.equal(describeGpsQuality(null), "unknown"); });
