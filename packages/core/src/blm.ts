@@ -62,3 +62,31 @@ export function sanitizeActiveClaimsGeoJson(input: unknown): ClaimsSanitization 
   }
   return { ok: true, collection: { type: "FeatureCollection", features, exceededTransferLimit: candidate.exceededTransferLimit === true } };
 }
+
+
+export interface BlmLayerAssessment {
+  compatible: boolean;
+  issues: string[];
+  layerName: string | null;
+  serviceVersion: number | null;
+  upstreamLastEditedAt: string | null;
+}
+const REQUIRED_BLM_FIELDS = ["OBJECTID","CSE_NR","CSE_NAME","CSE_DISP","BLM_PROD","QLTY","RCRD_ACRS","GEO_STATE"] as const;
+
+export function assessBlmLayerMetadata(input: unknown): BlmLayerAssessment {
+  const issues: string[] = [];
+  if (!input || typeof input !== "object") return { compatible: false, issues: ["Metadata was not an object."], layerName: null, serviceVersion: null, upstreamLastEditedAt: null };
+  const value = input as Record<string, unknown>;
+  const layerName = typeof value.name === "string" ? value.name : null;
+  const serviceVersion = typeof value.currentVersion === "number" && Number.isFinite(value.currentVersion) ? value.currentVersion : null;
+  if (layerName !== "Active Mining Claims") issues.push("Unexpected layer name.");
+  if (value.type !== "Feature Layer") issues.push("Expected a feature layer.");
+  if (value.geometryType !== "esriGeometryPolygon") issues.push("Expected polygon geometry.");
+  if (typeof value.capabilities !== "string" || !value.capabilities.split(",").map(item => item.trim()).includes("Query")) issues.push("Query capability is unavailable.");
+  const fieldNames = new Set(Array.isArray(value.fields) ? value.fields.flatMap(field => field && typeof field === "object" && typeof (field as Record<string, unknown>).name === "string" ? [(field as Record<string, unknown>).name as string] : []) : []);
+  const missingFields = REQUIRED_BLM_FIELDS.filter(field => !fieldNames.has(field));
+  if (missingFields.length) issues.push(`Missing required fields: ${missingFields.join(", ")}.`);
+  const editingInfo = value.editingInfo && typeof value.editingInfo === "object" ? value.editingInfo as Record<string, unknown> : null;
+  const lastEdit = editingInfo && typeof editingInfo.lastEditDate === "number" && Number.isFinite(editingInfo.lastEditDate) ? editingInfo.lastEditDate : null;
+  return { compatible: issues.length === 0, issues, layerName, serviceVersion, upstreamLastEditedAt: lastEdit === null ? null : new Date(lastEdit).toISOString() };
+}
