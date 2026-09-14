@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { buildActiveClaimsQuery, validateResearchBounds } = require("../dist/blm.js");
+const { buildActiveClaimsQuery, sanitizeActiveClaimsGeoJson, validateResearchBounds } = require("../dist/blm.js");
 const { createResearchSnapshot, parseResearchSnapshots, upsertResearchSnapshot } = require("../dist/research.js");
 const { createClaimDraft, parseClaimDraft } = require("../dist/claim-draft.js");
 const { arizonaWorkflow, nevadaWorkflow, parseWorkflowProgress } = require("../dist/state-workflows.js");
@@ -45,3 +45,8 @@ test("keeps a unique registry for every browser record type", () => { const keys
 test("Arizona workflow separates State Trust Land from federal claims", () => { assert.equal(arizonaWorkflow.state,"AZ"); assert.match(arizonaWorkflow.notice,/State Trust Land/i); assert.ok(arizonaWorkflow.steps.some(step=>/State Trust Land/i.test(step.title))); });
 test("Arizona workflow uses freshly reviewed authoritative sources", () => { assert.ok(arizonaWorkflow.sources.every(source=>source.checkedAt==="2026-09-14")); assert.ok(arizonaWorkflow.sources.some(source=>source.authority==="Arizona Legislature")); assert.ok(arizonaWorkflow.sources.every(source=>source.url.startsWith("https://"))); });
 test("Arizona progress rejects Nevada and unknown gate identifiers", () => { const ids=arizonaWorkflow.steps.map(step=>step.id); assert.deepEqual(parseWorkflowProgress('["az-records","records","fake","az-records"]',ids),["az-records"]); });
+
+test("sanitizes a valid BLM claim feature and strips unknown properties", () => { const result=sanitizeActiveClaimsGeoJson({type:"FeatureCollection",features:[{type:"Feature",id:7,properties:{CSE_NAME:"Test",SECRET:"drop"},geometry:{type:"Polygon",coordinates:[[[-120,38],[-119,38],[-119,39],[-120,38]]]}}]}); assert.equal(result.ok,true); assert.deepEqual(result.collection.features[0].properties,{CSE_NAME:"Test"}); });
+test("rejects malformed or out-of-range BLM geometry", () => { const result=sanitizeActiveClaimsGeoJson({type:"FeatureCollection",features:[{type:"Feature",properties:{},geometry:{type:"Polygon",coordinates:[[[-220,38],[-119,38],[-119,39],[-220,38]]]}}]}); assert.equal(result.ok,false); assert.match(result.error,/coordinates/i); });
+test("rejects unsupported upstream geometry types", () => { const result=sanitizeActiveClaimsGeoJson({type:"FeatureCollection",features:[{type:"Feature",properties:{},geometry:{type:"Point",coordinates:[-120,38]}}]}); assert.equal(result.ok,false); assert.match(result.error,/unsupported geometry/i); });
+test("rejects upstream feature counts above the public result cap", () => { const result=sanitizeActiveClaimsGeoJson({type:"FeatureCollection",features:Array.from({length:1001},()=>({}))}); assert.equal(result.ok,false); assert.match(result.error,/feature safety limit/i); });

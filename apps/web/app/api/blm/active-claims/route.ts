@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { buildActiveClaimsQuery, validateResearchBounds } from "@claimgrid/core";
+import { buildActiveClaimsQuery, sanitizeActiveClaimsGeoJson, validateResearchBounds } from "@claimgrid/core";
 export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
@@ -9,9 +9,11 @@ export async function GET(request: NextRequest) {
   try {
     const response = await fetch(buildActiveClaimsQuery(validation.bounds), { headers: { Accept: "application/geo+json, application/json" }, next: { revalidate: 900 }, signal: AbortSignal.timeout(12_000) });
     if (!response.ok) throw new Error(`BLM returned ${response.status}`);
-    const geojson = await response.json();
-    if (!geojson || geojson.type !== "FeatureCollection" || !Array.isArray(geojson.features)) throw new Error("Unexpected BLM response");
-    return NextResponse.json({ type: "FeatureCollection", features: geojson.features, metadata: { source: "U.S. Bureau of Land Management — MLRS Active Mining Claims", sourceUrl: "https://gis.blm.gov/nlsdb/rest/services/Mining_Claims/MiningClaims/MapServer/1", retrievedAt: new Date().toISOString(), resultLimit: 1000, exceededLimit: geojson.exceededTransferLimit === true || geojson.features.length === 1000, screeningOnly: true, warning: "A missing map feature does not establish that land is open to mineral entry. Verify land status, withdrawals, official records, and existing monuments on the ground." } }, { headers: { "Cache-Control": "public, s-maxage=900, stale-while-revalidate=3600" } });
+    const geojson: unknown = await response.json();
+    const sanitized = sanitizeActiveClaimsGeoJson(geojson);
+    if (!sanitized.ok) throw new Error(sanitized.error);
+    const collection = sanitized.collection;
+    return NextResponse.json({ type: "FeatureCollection", features: collection.features, metadata: { source: "U.S. Bureau of Land Management — MLRS Active Mining Claims", sourceUrl: "https://gis.blm.gov/nlsdb/rest/services/Mining_Claims/MiningClaims/MapServer/1", retrievedAt: new Date().toISOString(), resultLimit: 1000, exceededLimit: collection.exceededTransferLimit || collection.features.length === 1000, screeningOnly: true, warning: "A missing map feature does not establish that land is open to mineral entry. Verify land status, withdrawals, official records, and existing monuments on the ground." } }, { headers: { "Cache-Control": "public, s-maxage=900, stale-while-revalidate=3600" } });
   } catch (error) {
     console.error("BLM active claims request failed", error);
     return NextResponse.json({ error: "The official BLM layer is temporarily unavailable. No availability conclusion can be drawn." }, { status: 502 });
