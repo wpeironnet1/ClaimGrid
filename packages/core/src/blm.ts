@@ -90,3 +90,30 @@ export function assessBlmLayerMetadata(input: unknown): BlmLayerAssessment {
   const lastEdit = editingInfo && typeof editingInfo.lastEditDate === "number" && Number.isFinite(editingInfo.lastEditDate) ? editingInfo.lastEditDate : null;
   return { compatible: issues.length === 0, issues, layerName, serviceVersion, upstreamLastEditedAt: lastEdit === null ? null : new Date(lastEdit).toISOString() };
 }
+
+
+export interface ClaimRecordSummary {
+  caseNumber: string | null;
+  claimName: string | null;
+  disposition: string | null;
+  commodity: string | null;
+  quality: string | null;
+  recordedAcres: number | null;
+  state: string | null;
+}
+
+const safeClaimText = (value: unknown) => typeof value === "string" && value.trim() ? value.trim().slice(0, 200) : typeof value === "number" && Number.isFinite(value) ? String(value) : null;
+
+export function summarizeClaimProperties(properties: unknown): ClaimRecordSummary {
+  const value = properties && typeof properties === "object" ? properties as Record<string, unknown> : {};
+  const acres = typeof value.RCRD_ACRS === "number" && Number.isFinite(value.RCRD_ACRS) && value.RCRD_ACRS >= 0 ? value.RCRD_ACRS : null;
+  return {
+    caseNumber: safeClaimText(value.CSE_NR),
+    claimName: safeClaimText(value.CSE_NAME),
+    disposition: safeClaimText(value.CSE_DISP),
+    commodity: safeClaimText(value.BLM_PROD),
+    quality: safeClaimText(value.QLTY),
+    recordedAcres: acres,
+    state: safeClaimText(value.GEO_STATE)
+  };
+}

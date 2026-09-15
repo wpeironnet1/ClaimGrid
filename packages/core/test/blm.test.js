@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { assessBlmLayerMetadata, buildActiveClaimsQuery, sanitizeActiveClaimsGeoJson, validateResearchBounds } = require("../dist/blm.js");
+const { assessBlmLayerMetadata, buildActiveClaimsQuery, sanitizeActiveClaimsGeoJson, summarizeClaimProperties, validateResearchBounds } = require("../dist/blm.js");
 const { createResearchSnapshot, parseResearchSnapshots, upsertResearchSnapshot } = require("../dist/research.js");
 const { createClaimDraft, parseClaimDraft } = require("../dist/claim-draft.js");
 const { arizonaWorkflow, californiaWorkflow, nevadaWorkflow, parseWorkflowProgress } = require("../dist/state-workflows.js");
@@ -75,3 +75,7 @@ test("billing remains disabled until every server secret and price is valid", ()
 
 
 test("parses Stripe signatures without accepting malformed digests", () => { const good="a".repeat(64); assert.deepEqual(parseStripeSignatureHeader(`t=1789430400,v1=${good},v0=old`),{timestamp:1789430400,signatures:[good]}); assert.equal(parseStripeSignatureHeader("t=bad,v1=short"),null); assert.equal(parseStripeSignatureHeader(null),null); });
+
+
+test("summarizes only supported BLM claim details", () => { const summary=summarizeClaimProperties({CSE_NR:" CAMC123 ",CSE_NAME:" Example ",CSE_DISP:"ACTIVE",BLM_PROD:"GOLD",QLTY:"Lode",RCRD_ACRS:20.66,GEO_STATE:"CA",SECRET:"hidden"}); assert.deepEqual(summary,{caseNumber:"CAMC123",claimName:"Example",disposition:"ACTIVE",commodity:"GOLD",quality:"Lode",recordedAcres:20.66,state:"CA"}); assert.equal(Object.prototype.hasOwnProperty.call(summary,"SECRET"),false); });
+test("claim summaries reject invalid acreage and tolerate missing properties", () => { assert.equal(summarizeClaimProperties({RCRD_ACRS:-4}).recordedAcres,null); assert.equal(summarizeClaimProperties(null).caseNumber,null); });
