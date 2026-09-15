@@ -9,7 +9,7 @@ const { createTrackedDeadline, daysUntilDeadline, deadlineStatus, parseTrackedDe
 const { parseNevadaPacket, reviewNevadaPacket } = require("../dist/document-packet.js");
 const { webSecurityHeaders } = require("../dist/security.js");
 const { claimGridLocalRecords, collectLocalRecords, createLocalDataExport, parseLocalDataExport } = require("../dist/local-data.js");
-const { billingConfiguration, parseBillingPlan } = require("../dist/billing.js");
+const { billingConfiguration, parseBillingPlan, parseStripeSignatureHeader } = require("../dist/billing.js");
 test("accepts a bounded US viewport", () => assert.equal(validateResearchBounds({ west: -120, south: 38, east: -119, north: 39 }).ok, true));
 test("rejects an oversized request", () => assert.match(validateResearchBounds({ west: -125, south: 30, east: -110, north: 40 }).error, /five degrees/i));
 test("builds a constrained GeoJSON query", () => { const url = buildActiveClaimsQuery({ west: -120, south: 38, east: -119, north: 39 }); assert.equal(url.searchParams.get("f"), "geojson"); assert.equal(url.searchParams.get("resultRecordCount"), "1000"); assert.match(url.searchParams.get("outFields"), /QLTY/); });
@@ -71,4 +71,7 @@ test("rejects custom viewports outside the supported extent or with reversed edg
 
 
 test("billing accepts only explicit ClaimGrid plans", () => { assert.equal(parseBillingPlan("monthly"),"monthly"); assert.equal(parseBillingPlan("annual"),"annual"); assert.equal(parseBillingPlan("enterprise"),null); assert.equal(parseBillingPlan({}),null); });
-test("billing remains disabled until every server secret and price is valid", () => { assert.equal(billingConfiguration({}).ready,false); assert.equal(billingConfiguration({STRIPE_SECRET_KEY:"sk_live_valid123",STRIPE_PRO_MONTHLY_PRICE_ID:"price_monthly1",STRIPE_PRO_ANNUAL_PRICE_ID:"price_annual1"}).ready,true); assert.equal(billingConfiguration({STRIPE_SECRET_KEY:"pk_live_public",STRIPE_PRO_MONTHLY_PRICE_ID:"price_monthly1",STRIPE_PRO_ANNUAL_PRICE_ID:"price_annual1"}).ready,false); });
+test("billing remains disabled until every server secret and price is valid", () => { assert.equal(billingConfiguration({}).ready,false); assert.equal(billingConfiguration({STRIPE_SECRET_KEY:"sk_live_valid123",STRIPE_PRO_MONTHLY_PRICE_ID:"price_monthly1",STRIPE_PRO_ANNUAL_PRICE_ID:"price_annual1"}).ready,false); assert.equal(billingConfiguration({STRIPE_SECRET_KEY:"sk_live_valid123",STRIPE_PRO_MONTHLY_PRICE_ID:"price_monthly1",STRIPE_PRO_ANNUAL_PRICE_ID:"price_annual1",STRIPE_WEBHOOK_SECRET:"whsec_valid123",CLAIMGRID_ENTITLEMENT_STORE_URL:"https://accounts.claimgrid.example/stripe",CLAIMGRID_ENTITLEMENT_STORE_TOKEN:"x".repeat(32)}).ready,true); assert.equal(billingConfiguration({STRIPE_SECRET_KEY:"pk_live_public",STRIPE_PRO_MONTHLY_PRICE_ID:"price_monthly1",STRIPE_PRO_ANNUAL_PRICE_ID:"price_annual1"}).ready,false); });
+
+
+test("parses Stripe signatures without accepting malformed digests", () => { const good="a".repeat(64); assert.deepEqual(parseStripeSignatureHeader(`t=1789430400,v1=${good},v0=old`),{timestamp:1789430400,signatures:[good]}); assert.equal(parseStripeSignatureHeader("t=bad,v1=short"),null); assert.equal(parseStripeSignatureHeader(null),null); });
