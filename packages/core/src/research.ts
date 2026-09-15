@@ -28,3 +28,34 @@ export function parseResearchSnapshots(value: string | null): SavedResearchArea[
 export function upsertResearchSnapshot(snapshots: SavedResearchArea[], next: SavedResearchArea): SavedResearchArea[] {
   return [next, ...snapshots.filter(item => item.id !== next.id)].slice(0, 25);
 }
+
+
+export const CLAIM_BOOKMARK_STORAGE_VERSION = 1;
+export interface SavedClaimRecord {
+  id: string;
+  areaLabel: string;
+  bounds: Bounds;
+  details: import("./blm").ClaimRecordSummary;
+  sourceCheckedAt: string;
+  savedAt: string;
+  screeningOnly: true;
+}
+
+export function createClaimBookmark(input: Omit<SavedClaimRecord, "id" | "savedAt" | "screeningOnly"> & { recordKey: string }, now = new Date()): SavedClaimRecord {
+  const recordKey = input.recordKey.trim().slice(0, 200);
+  if (!recordKey) throw new Error("A stable BLM record identifier is required.");
+  return { id: `${recordKey}:${input.bounds.west}:${input.bounds.south}:${input.bounds.east}:${input.bounds.north}`, areaLabel: input.areaLabel, bounds: input.bounds, details: input.details, sourceCheckedAt: input.sourceCheckedAt, savedAt: now.toISOString(), screeningOnly: true };
+}
+
+export function parseClaimBookmarks(value: string | null): SavedClaimRecord[] {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(item => item && typeof item.id === "string" && typeof item.areaLabel === "string" && item.screeningOnly === true && typeof item.sourceCheckedAt === "string" && typeof item.savedAt === "string" && item.details && typeof item.details === "object" && item.bounds && [item.bounds.west,item.bounds.south,item.bounds.east,item.bounds.north].every(Number.isFinite)).slice(0,100);
+  } catch { return []; }
+}
+
+export function upsertClaimBookmark(records: SavedClaimRecord[], next: SavedClaimRecord): SavedClaimRecord[] {
+  return [next, ...records.filter(item => item.id !== next.id)].slice(0,100);
+}

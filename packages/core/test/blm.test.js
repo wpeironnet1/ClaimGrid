@@ -1,7 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const { assessBlmLayerMetadata, buildActiveClaimsQuery, sanitizeActiveClaimsGeoJson, summarizeClaimProperties, validateResearchBounds } = require("../dist/blm.js");
-const { createResearchSnapshot, parseResearchSnapshots, upsertResearchSnapshot } = require("../dist/research.js");
+const { createClaimBookmark, createResearchSnapshot, parseClaimBookmarks, parseResearchSnapshots, upsertClaimBookmark, upsertResearchSnapshot } = require("../dist/research.js");
 const { createClaimDraft, parseClaimDraft } = require("../dist/claim-draft.js");
 const { arizonaWorkflow, californiaWorkflow, nevadaWorkflow, parseWorkflowProgress } = require("../dist/state-workflows.js");
 const { addFieldObservation, createFieldEvidenceExport, createFieldObservation, describeGpsQuality, parseFieldObservations, serializeFieldEvidence } = require("../dist/field-record.js");
@@ -79,3 +79,8 @@ test("parses Stripe signatures without accepting malformed digests", () => { con
 
 test("summarizes only supported BLM claim details", () => { const summary=summarizeClaimProperties({CSE_NR:" CAMC123 ",CSE_NAME:" Example ",CSE_DISP:"ACTIVE",BLM_PROD:"GOLD",QLTY:"Lode",RCRD_ACRS:20.66,GEO_STATE:"CA",SECRET:"hidden"}); assert.deepEqual(summary,{caseNumber:"CAMC123",claimName:"Example",disposition:"ACTIVE",commodity:"GOLD",quality:"Lode",recordedAcres:20.66,state:"CA"}); assert.equal(Object.prototype.hasOwnProperty.call(summary,"SECRET"),false); });
 test("claim summaries reject invalid acreage and tolerate missing properties", () => { assert.equal(summarizeClaimProperties({RCRD_ACRS:-4}).recordedAcres,null); assert.equal(summarizeClaimProperties(null).caseNumber,null); });
+
+
+test("creates screening-only BLM record bookmarks with source context", () => { const record=createClaimBookmark({recordKey:"CAMC123",areaLabel:"Mother Lode",bounds:{west:-121,south:38,east:-120,north:39},details:summarizeClaimProperties({CSE_NR:"CAMC123",CSE_NAME:"Test"}),sourceCheckedAt:"2026-09-15T01:00:00Z"},new Date("2026-09-15T02:00:00Z")); assert.equal(record.screeningOnly,true); assert.match(record.id,/CAMC123/); assert.equal(record.savedAt,"2026-09-15T02:00:00.000Z"); });
+test("claim bookmark storage rejects malformed records", () => { assert.deepEqual(parseClaimBookmarks("bad"),[]); assert.deepEqual(parseClaimBookmarks('[{"id":"x","screeningOnly":false}]'),[]); });
+test("claim bookmarks update duplicates and keep the newest evidence", () => { const first=createClaimBookmark({recordKey:"CAMC1",areaLabel:"Area",bounds:{west:-121,south:38,east:-120,north:39},details:summarizeClaimProperties({CSE_NR:"CAMC1"}),sourceCheckedAt:"2026-09-15T01:00:00Z"}); const next={...first,sourceCheckedAt:"2026-09-15T03:00:00Z"}; assert.deepEqual(upsertClaimBookmark([first],next),[next]); });

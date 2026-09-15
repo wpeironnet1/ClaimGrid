@@ -4,6 +4,7 @@ export interface LocalDataExport { schema: "claimgrid-local-data-v1"; exportedAt
 
 export const claimGridLocalRecords: readonly LocalRecordDefinition[] = [
   { key: "claimgrid:research:v1", label: "Saved research areas", description: "Map bounds, source timestamps, and mapped-record counts." },
+  { key: "claimgrid:claim-bookmarks:v1", label: "Saved BLM claim records", description: "Sanitized BLM record attributes, source timestamps, and research viewports." },
   { key: "claimgrid.claim-draft.v1", label: "Claim project draft", description: "Project intake, location date, and federal deadline target." },
   { key: "claimgrid.workflow.nv.v1", label: "Nevada workflow progress", description: "Completed Nevada verification gates." },
   { key: "claimgrid.workflow.az.v1", label: "Arizona workflow progress", description: "Completed Arizona verification gates." },
