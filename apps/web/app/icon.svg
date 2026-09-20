@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title description">
+  <title id="title">ClaimGrid</title>
+  <desc id="description">CG monogram over a survey grid</desc>
+  <rect width="512" height="512" rx="104" fill="#172018"/>
+  <path d="M64 160h384M64 256h384M64 352h384M160 64v384M256 64v384M352 64v384" stroke="#f5f1e7" stroke-opacity=".16" stroke-width="8"/>
+  <circle cx="256" cy="256" r="150" fill="#f5f1e7"/>
+  <path d="M244 199c-16-17-35-25-58-25-47 0-78 34-78 82s31 82 78 82c25 0 46-9 62-28l-27-25c-9 11-19 16-33 16-24 0-40-18-40-45s16-45 40-45c13 0 23 5 32 15l24-27Zm91 139c28 0 50-10 69-26v-69h-72v31h36v20c-9 5-19 7-30 7-27 0-46-18-46-45 0-28 19-45 47-45 16 0 29 5 41 17l24-28c-17-17-40-26-67-26-50 0-85 34-85 82s35 82 83 82Z" fill="#9b583d"/>
+</svg>
