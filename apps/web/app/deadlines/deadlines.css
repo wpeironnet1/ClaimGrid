@@ -1,1 +1,267 @@
-.deadlinePage{min-height:100vh;background:#f4f0e7;color:#20271f;font-family:Arial,sans-serif}.deadlinePage nav{height:72px;padding:0 max(24px,calc((100vw - 1100px)/2));display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #d6d0c4}.deadlinePage nav a{color:#263027;text-decoration:none;font-weight:700}.deadlinePage nav>div{display:flex;gap:24px}.deadlineBrand{display:flex;align-items:center;gap:10px;font:700 21px Georgia,serif}.deadlineBrand span{display:grid;place-items:center;width:37px;height:37px;border-radius:50%;background:#a34e2e;color:white;font:700 11px Arial}.deadlineShell{max-width:1100px;margin:auto;padding:58px 24px 90px}.deadlineShell>header{max-width:800px}.deadlineShell>header>span{font-size:11px;letter-spacing:.15em;font-weight:800;color:#995034}.deadlineShell h1{font:500 clamp(42px,6vw,68px)/1 Georgia,serif;letter-spacing:-.04em;margin:14px 0}.deadlineShell>header p{font-size:18px;line-height:1.55;color:#596159}.deadlineGrid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(300px,.75fr);gap:28px;margin-top:42px}.deadlineGrid h2{font:500 28px Georgia,serif}.deadlineCard,.emptyDeadline,.deadlineGrid aside{background:white;border:1px solid #d9d3c8;border-radius:12px;padding:23px;margin-bottom:14px}.deadlineCard{display:grid;grid-template-columns:1fr auto;gap:18px;border-left:5px solid #859081}.deadlineCard.urgent,.deadlineCard.overdue{border-left-color:#ae452c}.deadlineCard.upcoming{border-left-color:#c08d38}.deadlineCard small{text-transform:uppercase;font-size:10px;letter-spacing:.12em;font-weight:800;color:#915038}.deadlineCard h3{font:500 22px Georgia,serif;margin:6px 0}.deadlineCard p{margin:0;color:#697168}.dateBlock{text-align:right}.dateBlock b,.dateBlock span{display:block}.dateBlock b{font-size:20px}.dateBlock span{font-size:12px;color:#985039;margin-top:5px}.deadlineCard footer{grid-column:1/-1;border-top:1px solid #e5e0d7;padding-top:13px;display:flex;gap:13px;align-items:center;font-size:11px}.deadlineCard footer a{color:#33483a;font-weight:700}.deadlineCard footer span{color:#747b73}.deadlineCard footer button{margin-left:auto;border:0;background:none;color:#9b422d;cursor:pointer}.deadlineGrid aside{align-self:start}.deadlineGrid form label{display:grid;gap:7px;font-size:13px;font-weight:800;margin-bottom:16px}.deadlineGrid input{box-sizing:border-box;width:100%;padding:12px;border:1px solid #bbb6ab;border-radius:7px;font:inherit}.confirm{display:flex!important;grid-template-columns:auto 1fr!important;align-items:flex-start;gap:9px!important;font-weight:400!important;line-height:1.45}.confirm input{width:auto;margin-top:3px;accent-color:#9b4d31}.addDeadline{width:100%;border:0;background:#a34e2e;color:white;padding:14px;border-radius:7px;font-weight:800}.deadlineError{color:#a12e23;font-weight:700;font-size:13px}.deadlineWarning{margin-top:25px;padding:18px;background:#28342a;color:#f3f0e8;border-radius:9px}.deadlineWarning p{color:#c9d0c7;line-height:1.45;font-size:13px;margin-bottom:0}.emptyDeadline p{color:#687168;line-height:1.5}.deadlinePage input:focus,.deadlinePage button:focus-visible,.deadlinePage a:focus-visible{outline:3px solid #d59a57;outline-offset:2px}@media(max-width:760px){.deadlineGrid{grid-template-columns:1fr}.deadlineShell{padding-top:40px}.deadlineCard{grid-template-columns:1fr}.dateBlock{text-align:left}.deadlineCard footer{grid-column:1;flex-wrap:wrap}}
+.deadlinePage {
+  min-height: 100vh;
+  background: #f4f0e7;
+  color: #20271f;
+  font-family: Arial, sans-serif;
+}
+.deadlinePage nav {
+  height: 72px;
+  padding: 0 max(24px, calc((100vw - 1100px) / 2));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #d6d0c4;
+}
+.deadlinePage nav a {
+  color: #263027;
+  text-decoration: none;
+  font-weight: 700;
+}
+.deadlinePage nav > div {
+  display: flex;
+  gap: 24px;
+}
+.deadlineBrand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font:
+    700 21px Georgia,
+    serif;
+}
+.deadlineBrand span {
+  display: grid;
+  place-items: center;
+  width: 37px;
+  height: 37px;
+  border-radius: 50%;
+  background: #a34e2e;
+  color: white;
+  font: 700 11px Arial;
+}
+.deadlineShell {
+  max-width: 1100px;
+  margin: auto;
+  padding: 58px 24px 90px;
+}
+.deadlineShell > header {
+  max-width: 800px;
+}
+.deadlineShell > header > span {
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  font-weight: 800;
+  color: #995034;
+}
+.deadlineShell h1 {
+  font:
+    500 clamp(42px, 6vw, 68px)/1 Georgia,
+    serif;
+  letter-spacing: -0.04em;
+  margin: 14px 0;
+}
+.deadlineShell > header p {
+  font-size: 18px;
+  line-height: 1.55;
+  color: #596159;
+}
+.deadlineGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.75fr);
+  gap: 28px;
+  margin-top: 42px;
+}
+.deadlineGrid h2 {
+  font:
+    500 28px Georgia,
+    serif;
+}
+.deadlineHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.deadlineHeading button {
+  border: 1px solid #995034;
+  background: transparent;
+  color: #81452f;
+  border-radius: 18px;
+  padding: 9px 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.calendarNote {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #687168;
+  margin: 8px 4px 24px;
+}
+.deadlineCard,
+.emptyDeadline,
+.deadlineGrid aside {
+  background: white;
+  border: 1px solid #d9d3c8;
+  border-radius: 12px;
+  padding: 23px;
+  margin-bottom: 14px;
+}
+.deadlineCard {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 18px;
+  border-left: 5px solid #859081;
+}
+.deadlineCard.urgent,
+.deadlineCard.overdue {
+  border-left-color: #ae452c;
+}
+.deadlineCard.upcoming {
+  border-left-color: #c08d38;
+}
+.deadlineCard small {
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  font-weight: 800;
+  color: #915038;
+}
+.deadlineCard h3 {
+  font:
+    500 22px Georgia,
+    serif;
+  margin: 6px 0;
+}
+.deadlineCard p {
+  margin: 0;
+  color: #697168;
+}
+.dateBlock {
+  text-align: right;
+}
+.dateBlock b,
+.dateBlock span {
+  display: block;
+}
+.dateBlock b {
+  font-size: 20px;
+}
+.dateBlock span {
+  font-size: 12px;
+  color: #985039;
+  margin-top: 5px;
+}
+.deadlineCard footer {
+  grid-column: 1/-1;
+  border-top: 1px solid #e5e0d7;
+  padding-top: 13px;
+  display: flex;
+  gap: 13px;
+  align-items: center;
+  font-size: 11px;
+}
+.deadlineCard footer a {
+  color: #33483a;
+  font-weight: 700;
+}
+.deadlineCard footer span {
+  color: #747b73;
+}
+.deadlineCard footer button {
+  margin-left: auto;
+  border: 0;
+  background: none;
+  color: #9b422d;
+  cursor: pointer;
+}
+.deadlineGrid aside {
+  align-self: start;
+}
+.deadlineGrid form label {
+  display: grid;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 800;
+  margin-bottom: 16px;
+}
+.deadlineGrid input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #bbb6ab;
+  border-radius: 7px;
+  font: inherit;
+}
+.confirm {
+  display: flex !important;
+  grid-template-columns: auto 1fr !important;
+  align-items: flex-start;
+  gap: 9px !important;
+  font-weight: 400 !important;
+  line-height: 1.45;
+}
+.confirm input {
+  width: auto;
+  margin-top: 3px;
+  accent-color: #9b4d31;
+}
+.addDeadline {
+  width: 100%;
+  border: 0;
+  background: #a34e2e;
+  color: white;
+  padding: 14px;
+  border-radius: 7px;
+  font-weight: 800;
+}
+.deadlineError {
+  color: #a12e23;
+  font-weight: 700;
+  font-size: 13px;
+}
+.deadlineWarning {
+  margin-top: 25px;
+  padding: 18px;
+  background: #28342a;
+  color: #f3f0e8;
+  border-radius: 9px;
+}
+.deadlineWarning p {
+  color: #c9d0c7;
+  line-height: 1.45;
+  font-size: 13px;
+  margin-bottom: 0;
+}
+.emptyDeadline p {
+  color: #687168;
+  line-height: 1.5;
+}
+.deadlinePage input:focus,
+.deadlinePage button:focus-visible,
+.deadlinePage a:focus-visible {
+  outline: 3px solid #d59a57;
+  outline-offset: 2px;
+}
+@media (max-width: 760px) {
+  .deadlineGrid {
+    grid-template-columns: 1fr;
+  }
+  .deadlineShell {
+    padding-top: 40px;
+  }
+  .deadlineCard {
+    grid-template-columns: 1fr;
+  }
+  .dateBlock {
+    text-align: left;
+  }
+  .deadlineCard footer {
+    grid-column: 1;
+    flex-wrap: wrap;
+  }
+  .deadlineHeading {
+    align-items: flex-start;
+    flex-direction: column;
+    margin-bottom: 18px;
+  }
+}
