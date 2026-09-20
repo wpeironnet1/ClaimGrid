@@ -445,6 +445,7 @@ footer p {
   line-height: 1.5;
   color: #677067;
 }
+footer>div{display:flex;gap:18px}footer>div a{color:inherit;font-size:12px}
 @media (max-width: 800px) {
   .navLinks {
     display: none;

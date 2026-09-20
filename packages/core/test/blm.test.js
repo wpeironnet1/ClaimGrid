@@ -10,6 +10,7 @@ const { parseNevadaPacket, reviewNevadaPacket } = require("../dist/document-pack
 const { webSecurityHeaders } = require("../dist/security.js");
 const { claimGridLocalRecords, collectLocalRecords, createLocalDataExport, parseLocalDataExport } = require("../dist/local-data.js");
 const { billingConfiguration, parseBillingPlan, parseStripeSignatureHeader } = require("../dist/billing.js");
+const { LEGAL_NOTICE_REVIEWED_AT, legalNoticeHasRequiredSafeguards, legalNoticeSections } = require("../dist/legal.js");
 test("accepts a bounded US viewport", () => assert.equal(validateResearchBounds({ west: -120, south: 38, east: -119, north: 39 }).ok, true));
 test("rejects an oversized request", () => assert.match(validateResearchBounds({ west: -125, south: 30, east: -110, north: 40 }).error, /five degrees/i));
 test("builds a constrained GeoJSON query", () => { const url = buildActiveClaimsQuery({ west: -120, south: 38, east: -119, north: 39 }); assert.equal(url.searchParams.get("f"), "geojson"); assert.equal(url.searchParams.get("resultRecordCount"), "1000"); assert.match(url.searchParams.get("outFields"), /QLTY/); });
@@ -86,3 +87,6 @@ test("claim summaries reject invalid acreage and tolerate missing properties", (
 test("creates screening-only BLM record bookmarks with source context", () => { const record=createClaimBookmark({recordKey:"CAMC123",areaLabel:"Mother Lode",bounds:{west:-121,south:38,east:-120,north:39},details:summarizeClaimProperties({CSE_NR:"CAMC123",CSE_NAME:"Test"}),sourceCheckedAt:"2026-09-15T01:00:00Z"},new Date("2026-09-15T02:00:00Z")); assert.equal(record.screeningOnly,true); assert.match(record.id,/CAMC123/); assert.equal(record.savedAt,"2026-09-15T02:00:00.000Z"); });
 test("claim bookmark storage rejects malformed records", () => { assert.deepEqual(parseClaimBookmarks("bad"),[]); assert.deepEqual(parseClaimBookmarks('[{"id":"x","screeningOnly":false}]'),[]); });
 test("claim bookmarks update duplicates and keep the newest evidence", () => { const first=createClaimBookmark({recordKey:"CAMC1",areaLabel:"Area",bounds:{west:-121,south:38,east:-120,north:39},details:summarizeClaimProperties({CSE_NR:"CAMC1"}),sourceCheckedAt:"2026-09-15T01:00:00Z"}); const next={...first,sourceCheckedAt:"2026-09-15T03:00:00Z"}; assert.deepEqual(upsertClaimBookmark([first],next),[next]); });
+
+test("public legal notice preserves required no-availability safeguards", () => { assert.equal(legalNoticeHasRequiredSafeguards(),true); assert.ok(legalNoticeSections.length>=6); });
+test("public legal notice has a valid review date", () => assert.match(LEGAL_NOTICE_REVIEWED_AT,/^\d{4}-\d{2}-\d{2}$/));

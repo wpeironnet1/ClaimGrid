@@ -195,7 +195,7 @@ export default function Home() {
           Research tools, not legal advice. Always verify with BLM, the county,
           the state, and conditions on the ground.
         </p>
-        <a href="/privacy">Privacy & local data</a>
+        <div><a href="/legal">Legal & verification</a><a href="/privacy">Privacy & local data</a></div>
       </footer>
     </main>
   );
