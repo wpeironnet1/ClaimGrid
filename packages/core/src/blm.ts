@@ -71,6 +71,17 @@ export interface BlmLayerAssessment {
   serviceVersion: number | null;
   upstreamLastEditedAt: string | null;
 }
+
+export type SourceFreshness = "recent-edit" | "older-edit" | "unknown";
+
+/** Describes an upstream edit marker's age without treating it as proof that every record is current. */
+export function describeSourceFreshness(upstreamLastEditedAt: string | null, checkedAt: string, recentDays = 7): SourceFreshness {
+  if (!upstreamLastEditedAt || recentDays <= 0) return "unknown";
+  const edited = Date.parse(upstreamLastEditedAt);
+  const checked = Date.parse(checkedAt);
+  if (!Number.isFinite(edited) || !Number.isFinite(checked) || edited > checked) return "unknown";
+  return checked - edited <= recentDays * 86_400_000 ? "recent-edit" : "older-edit";
+}
 const REQUIRED_BLM_FIELDS = ["OBJECTID","CSE_NR","CSE_NAME","CSE_DISP","BLM_PROD","QLTY","RCRD_ACRS","GEO_STATE"] as const;
 
 export function assessBlmLayerMetadata(input: unknown): BlmLayerAssessment {
