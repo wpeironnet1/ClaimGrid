@@ -11,6 +11,7 @@ const {
 const {
   createClaimBookmark,
   createResearchSnapshot,
+  describeEvidenceAge,
   parseClaimBookmarks,
   parseResearchSnapshots,
   upsertClaimBookmark,
@@ -114,6 +115,13 @@ test("updates matching areas instead of duplicating them", () => {
       .length,
     1,
   );
+});
+test("saved screening evidence clearly ages into recheck and stale states", () => {
+  assert.equal(describeEvidenceAge("2026-09-20T12:00:00Z","2026-09-21T11:59:59Z"),"same-day");
+  assert.equal(describeEvidenceAge("2026-09-18T12:00:00Z","2026-09-21T12:00:00Z"),"recheck");
+  assert.equal(describeEvidenceAge("2026-09-01T12:00:00Z","2026-09-21T12:00:00Z"),"stale");
+  assert.equal(describeEvidenceAge("2026-09-22T12:00:00Z","2026-09-21T12:00:00Z"),"unknown");
+  assert.equal(describeEvidenceAge("invalid","2026-09-21T12:00:00Z"),"unknown");
 });
 test("keeps research drafts separate from legal location", () => {
   const draft = createClaimDraft(

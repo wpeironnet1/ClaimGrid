@@ -5,6 +5,7 @@ import {
   CLAIM_BOOKMARK_STORAGE_VERSION,
   createClaimBookmark,
   createResearchSnapshot,
+  describeEvidenceAge,
   describeSourceFreshness,
   parseClaimBookmarks,
   parseResearchSnapshots,
@@ -263,6 +264,16 @@ export default function ClaimsExplorer() {
     const next = saved.filter((item) => item.id !== id);
     setSaved(next);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+  }
+  function reopenSaved(item: SavedResearchArea) {
+    setCustomArea({ ...item.bounds, id: "custom", label: item.label });
+    setCustomDraft({ label: item.label, west: String(item.bounds.west), south: String(item.bounds.south), east: String(item.bounds.east), north: String(item.bounds.north) });
+    setAreaId("custom");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  function ageLabel(sourceCheckedAt: string) {
+    const age=describeEvidenceAge(sourceCheckedAt);
+    return age==="same-day"?"Checked within 24 hours":age==="recheck"?"Recheck before relying on it":age==="stale"?"Stale — rerun required":"Timestamp needs verification";
   }
 
   const freshness = sourceHealth
@@ -523,13 +534,9 @@ export default function ClaimsExplorer() {
                     {item.activeClaimCount} mapped records • checked{" "}
                     {new Date(item.sourceCheckedAt).toLocaleString()}
                   </span>
+                  <small className={`evidenceAge ${describeEvidenceAge(item.sourceCheckedAt)}`}>{ageLabel(item.sourceCheckedAt)}</small>
                 </div>
-                <button
-                  onClick={() => removeSaved(item.id)}
-                  aria-label={`Remove ${item.label}`}
-                >
-                  Remove
-                </button>
+                <div className="savedActions"><button onClick={()=>reopenSaved(item)} aria-label={`Reload ${item.label} and request current BLM data`}>Reload live data</button><button onClick={() => removeSaved(item.id)} aria-label={`Remove ${item.label}`}>Remove</button></div>
               </article>
             ))
           )}
@@ -562,6 +569,7 @@ export default function ClaimsExplorer() {
                     {item.areaLabel} · checked{" "}
                     {new Date(item.sourceCheckedAt).toLocaleString()}
                   </span>
+                  <small className={`evidenceAge ${describeEvidenceAge(item.sourceCheckedAt)}`}>{ageLabel(item.sourceCheckedAt)}</small>
                 </div>
                 <button
                   onClick={() => removeSavedClaim(item.id)}

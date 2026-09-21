@@ -40,6 +40,19 @@ export function upsertResearchSnapshot(snapshots: SavedResearchArea[], next: Sav
   return [next, ...snapshots.filter(item => item.id !== next.id)].slice(0, 25);
 }
 
+export type EvidenceAge = "same-day" | "recheck" | "stale" | "unknown";
+
+/** Classifies saved screening evidence without implying that a recent check proves legal currency. */
+export function describeEvidenceAge(sourceCheckedAt: string, now = new Date().toISOString()): EvidenceAge {
+  const checked = Date.parse(sourceCheckedAt);
+  const current = Date.parse(now);
+  if (!Number.isFinite(checked) || !Number.isFinite(current) || checked > current) return "unknown";
+  const age = current - checked;
+  if (age <= 86_400_000) return "same-day";
+  if (age <= 7 * 86_400_000) return "recheck";
+  return "stale";
+}
+
 
 export const CLAIM_BOOKMARK_STORAGE_VERSION = 1;
 export interface SavedClaimRecord {
