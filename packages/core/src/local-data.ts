@@ -16,6 +16,7 @@ export const claimGridLocalRecords: readonly LocalRecordDefinition[] = [
   { key: "claimgrid.deadlines.v1", label: "Tracked deadlines", description: "Federal and source-confirmed county filing dates." },
   { key: "claimgrid.packet.nv.v1", label: "Nevada document worksheet", description: "Locators, land description, and map cross-checks." },
   { key: "claimgrid.packet.blm.v1", label: "BLM recording worksheet", description: "Claimant, county-recording, map, acreage, and fee cross-checks." }
+  ,{ key: "claimgrid.community-drafts.v1", label: "Private community observation drafts", description: "Unverified on-device reports awaiting future account and moderation support." }
 ] as const;
 
 export function collectLocalRecords(read: (key: string) => string | null): LocalRecord[] {

@@ -71,6 +71,7 @@ export default function Home() {
         <div className="navLinks">
           <a href="#map">Explore</a>
           <a href="#process">How it works</a>
+          <a href="/community">Observations</a>
           <a href="/pricing">Pricing</a>
         </div>
         <a className="quietButton" href="/privacy">

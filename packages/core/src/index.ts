@@ -46,6 +46,7 @@ export * from "./legal";
 export * from "./site-discovery";
 export * from "./monitoring";
 export * from "./launch-readiness";
+export * from "./community-observation";
 
 export function calculateFederalDeadline(locationDate: string): string {
   const date = new Date(`${locationDate}T12:00:00Z`);
