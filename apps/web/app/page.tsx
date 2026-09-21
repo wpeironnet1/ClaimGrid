@@ -3,6 +3,7 @@ import {
   californiaWorkflow,
   federalWorkflow,
   nevadaWorkflow,
+  oregonWorkflow,
 } from "@claimgrid/core";
 
 const stateGuides = [
@@ -26,6 +27,13 @@ const stateGuides = [
     href: "/claim/arizona",
     note: "Federal versus State Trust Land verification",
     tone: "sage",
+  },
+  {
+    workflow: oregonWorkflow,
+    name: "Oregon",
+    href: "/claim/oregon",
+    note: "Claim-type, land-status, access, and recording checks",
+    tone: "gold",
   },
 ];
 

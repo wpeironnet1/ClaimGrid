@@ -90,6 +90,28 @@ export const californiaWorkflow: StateWorkflow = {
   ]
 };
 
+export const oregonWorkflow: StateWorkflow = {
+  state: "OR",
+  title: "Oregon claim-location research checklist",
+  reviewedAt: "2026-09-21",
+  notice: "This checklist organizes official sources; it does not determine mineral-entry status, validate discovery, authorize access or surface disturbance, or certify compliance. A mapped gap or federal ownership alone does not mean land is open to mineral entry.",
+  steps: [
+    { id: "or-status", phase: "research", title: "Verify land and mineral-entry status", description: "Identify the legal description, surface manager, mineral estate, existing claims, withdrawals, closures, and special-area restrictions using current BLM title and case records. Never infer availability from an empty map area.", verification: "Save source dates and confirm uncertain status with the responsible BLM office and surface manager." },
+    { id: "or-access", phase: "research", title: "Check access and surface-use authorization", description: "Determine who manages the surface and whether private access, agency authorization, a notice, an operating plan, or Oregon permits may be required. Locating a claim does not itself authorize entry or mining disturbance.", verification: "Confirm access and proposed activity requirements with every responsible owner and agency before field work." },
+    { id: "or-county", phase: "research", title: "Confirm county and claim-type rules", description: "Identify each county containing the proposed claim and review current Oregon Revised Statutes Chapter 517 requirements for the applicable lode, placer, or millsite location, together with recorder formatting, fee, and submission rules.", verification: "Confirm the current deadline and document standards directly with each applicable county clerk or recording office." },
+    { id: "or-field", phase: "field", title: "Inspect the site and discovery evidence", description: "Check lawful access, existing monuments, conflicting occupation, protected resources, and evidence of a valuable locatable mineral before treating the project as a location.", verification: "Online screening and phone GPS cannot establish discovery, legal boundaries, ownership, or availability." },
+    { id: "or-location", phase: "field", title: "Post, mark, and document the location", description: "Follow the current Oregon method for the claim type. Preserve actual posting and location dates, notice details, boundary or monument evidence, legal description, coordinates, and photographs without disturbing protected resources.", verification: "Compare the field plan with current ORS Chapter 517 and federal location requirements immediately before acting." },
+    { id: "or-record", phase: "county", title: "Record with the county", description: "Prepare and record the required location notice in the appropriate county within the applicable Oregon deadline. Make sure the recorded information agrees with the physical location and claim type.", verification: "Retain the recorded copy, receipt, document number, and evidence of timely delivery; county acceptance does not establish validity." },
+    { id: "or-blm", phase: "federal", title: "Record with BLM", description: "File the required location notice or certificate, map, claimant information, and current fees with BLM within 90 days after physical location, even if Oregon requires earlier recording.", verification: "Confirm BLM receipt, assigned serial number, and the resulting MLRS record; filing does not cure an invalid location." }
+  ],
+  sources: [
+    { label: "Oregon Revised Statutes — Chapter 517", authority: "Oregon Legislature", checkedAt: "2026-09-21", url: "https://www.oregonlegislature.gov/bills_laws/ors/ors517.html" },
+    { label: "BLM — Recording a Mining Claim or Site", authority: "U.S. Bureau of Land Management", checkedAt: "2026-09-21", url: "https://www.blm.gov/programs/energy-and-minerals/mining-and-minerals/locatable-minerals/mining-claims/recording" },
+    { label: "Electronic Code of Federal Regulations — 43 CFR Part 3832", authority: "U.S. Government Publishing Office", checkedAt: "2026-09-21", url: "https://www.ecfr.gov/current/title-43/subtitle-B/chapter-II/subchapter-C/part-3830/subpart-3832" },
+    { label: "Mineral & Land Records System", authority: "U.S. Bureau of Land Management", checkedAt: "2026-09-21", url: "https://mlrs.blm.gov/" }
+  ]
+};
+
 export function parseWorkflowProgress(raw: string | null, allowedIds: readonly string[]): string[] {
   if (!raw) return [];
   try {

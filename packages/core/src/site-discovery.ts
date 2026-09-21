@@ -1,5 +1,5 @@
 export const PUBLIC_SITE_PATHS = [
-  "/", "/explore", "/claim/nevada", "/claim/arizona", "/claim/california",
+  "/", "/explore", "/claim/nevada", "/claim/arizona", "/claim/california", "/claim/oregon",
   "/claim/new", "/deadlines", "/documents/nevada", "/legal", "/pricing", "/privacy"
 ] as const;
 
