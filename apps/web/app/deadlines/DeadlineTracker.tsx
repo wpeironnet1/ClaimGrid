@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState, type FormEvent } from "react";
 import {
+  BLM_MAINTENANCE_SOURCE_REVIEWED_AT,
+  createBlmMaintenanceDeadlines,
   createDeadlineCalendar,
   createTrackedDeadline,
   deadlineStatus,
@@ -8,6 +10,7 @@ import {
   parseClaimDraft,
   parseTrackedDeadlines,
   type ClaimDraft,
+  type MaintenancePath,
   type TrackedDeadline,
 } from "@claimgrid/core";
 
@@ -21,6 +24,12 @@ export default function DeadlineTracker() {
     [sourceUrl, setSourceUrl] = useState(""),
     [confirmed, setConfirmed] = useState(false),
     [error, setError] = useState("");
+  const [maintenanceYear, setMaintenanceYear] = useState(
+      String(new Date().getUTCFullYear() + 1),
+    ),
+    [maintenancePath, setMaintenancePath] = useState<MaintenancePath>("fee"),
+    [waiverConfirmed, setWaiverConfirmed] = useState(false),
+    [maintenanceError, setMaintenanceError] = useState("");
   useEffect(() => {
     const savedDraft = parseClaimDraft(localStorage.getItem(DRAFT_KEY));
     const saved = parseTrackedDeadlines(localStorage.getItem(DEADLINES_KEY));
@@ -79,6 +88,28 @@ export default function DeadlineTracker() {
     setDeadlines(next);
     localStorage.setItem(DEADLINES_KEY, JSON.stringify(next));
   }
+  function addMaintenance(event: FormEvent) {
+    event.preventDefault();
+    setMaintenanceError("");
+    try {
+      const generated = createBlmMaintenanceDeadlines({
+        calendarYear: Number(maintenanceYear),
+        path: maintenancePath,
+        waiverEligibilityConfirmed: waiverConfirmed,
+      });
+      const generatedIds = new Set(generated.map((item) => item.id));
+      const next = [
+        ...generated,
+        ...deadlines.filter((item) => !generatedIds.has(item.id)),
+      ];
+      setDeadlines(next);
+      localStorage.setItem(DEADLINES_KEY, JSON.stringify(next));
+    } catch (caught) {
+      setMaintenanceError(
+        caught instanceof Error ? caught.message : "Unable to create maintenance reminders.",
+      );
+    }
+  }
   function exportCalendar() {
     const calendar = createDeadlineCalendar(
       deadlines,
@@ -109,9 +140,10 @@ export default function DeadlineTracker() {
           <span>FILING CONTROL CENTER</span>
           <h1>Know which clock runs first.</h1>
           <p>
-            Federal and county deadlines are separate. ClaimGrid only calculates
-            the federal 90-day maximum; enter a county deadline only after
-            verifying it with the responsible recorder.
+            Federal and county deadlines are separate. ClaimGrid calculates the
+            federal 90-day target and can organize source-dated annual BLM
+            reminders; enter a county deadline only after verifying it with the
+            responsible recorder.
           </p>
         </header>
         <section className="deadlineGrid">
@@ -177,7 +209,51 @@ export default function DeadlineTracker() {
             </p>
           </div>
           <aside>
-            <h2>Add county deadline</h2>
+            <section className="maintenanceBuilder" aria-labelledby="maintenance-heading">
+              <span className="sourceBadge">BLM SOURCE REVIEWED {BLM_MAINTENANCE_SOURCE_REVIEWED_AT}</span>
+              <h2 id="maintenance-heading">Add annual BLM maintenance</h2>
+              <p>
+                Choose a reminder path only after checking current claim status,
+                ownership, fees, waiver eligibility, forms, and BLM instructions.
+              </p>
+              <form onSubmit={addMaintenance}>
+                <label>
+                  Filing calendar year
+                  <input
+                    type="number"
+                    min="2000"
+                    max="2200"
+                    value={maintenanceYear}
+                    onChange={(event) => setMaintenanceYear(event.target.value)}
+                    required
+                  />
+                </label>
+                <fieldset>
+                  <legend>Reminder path</legend>
+                  <label className="choice">
+                    <input type="radio" name="maintenance-path" checked={maintenancePath === "fee"} onChange={() => { setMaintenancePath("fee"); setWaiverConfirmed(false); }} />
+                    Pay the annual maintenance fee by September 1
+                  </label>
+                  <label className="choice">
+                    <input type="radio" name="maintenance-path" checked={maintenancePath === "waiver"} onChange={() => setMaintenancePath("waiver")} />
+                    Research the waiver path and December 30 follow-up
+                  </label>
+                </fieldset>
+                {maintenancePath === "waiver" && (
+                  <label className="confirm">
+                    <input type="checkbox" checked={waiverConfirmed} onChange={(event) => setWaiverConfirmed(event.target.checked)} required />
+                    <span>I checked BLM’s current nationwide ownership limit and understand every claimant and related party must qualify. ClaimGrid does not determine eligibility.</span>
+                  </label>
+                )}
+                {maintenanceError && <p role="alert" className="deadlineError">{maintenanceError}</p>}
+                <button className="addDeadline">Add BLM reminders</button>
+              </form>
+              <p className="maintenanceCaveat">
+                BLM currently publishes September 1 for fees or waiver certification and December 30 for the applicable waiver follow-up. Confirm the current year, forms, amounts, assessment-work rules, state obligations, and proof of timely receipt directly with BLM.
+              </p>
+            </section>
+            <section className="countyBuilder" aria-labelledby="county-heading">
+              <h2 id="county-heading">Add county deadline</h2>
             <form onSubmit={addCounty}>
               <label>
                 Due date
@@ -227,6 +303,7 @@ export default function DeadlineTracker() {
               )}
               <button className="addDeadline">Track verified date</button>
             </form>
+            </section>
             <div className="deadlineWarning">
               <b>Not a filing service</b>
               <p>

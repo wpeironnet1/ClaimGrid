@@ -177,6 +177,44 @@
 .deadlineGrid aside {
   align-self: start;
 }
+.maintenanceBuilder {
+  border-bottom: 1px solid #ded8cd;
+  padding-bottom: 24px;
+  margin-bottom: 26px;
+}
+.maintenanceBuilder > p,
+.maintenanceCaveat {
+  color: #687168;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.sourceBadge {
+  display: inline-block;
+  color: #75432f;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+.deadlineGrid fieldset {
+  border: 1px solid #d2ccc1;
+  border-radius: 7px;
+  margin: 0 0 16px;
+  padding: 12px;
+}
+.deadlineGrid legend {
+  font-size: 12px;
+  font-weight: 800;
+  padding: 0 4px;
+}
+.deadlineGrid .choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-weight: 400;
+  line-height: 1.4;
+}
+.deadlineGrid .choice:last-child { margin-bottom: 0; }
+.deadlineGrid .choice input { width: auto; margin-top: 3px; accent-color: #9b4d31; }
 .deadlineGrid form label {
   display: grid;
   gap: 7px;

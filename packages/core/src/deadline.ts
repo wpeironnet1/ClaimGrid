@@ -1,5 +1,10 @@
 export type DeadlineKind = "county" | "federal" | "maintenance";
 export type DeadlineStatus = "overdue" | "urgent" | "upcoming" | "later";
+export type MaintenancePath = "fee" | "waiver";
+
+export const BLM_MAINTENANCE_SOURCE_URL =
+  "https://www.blm.gov/programs/energy-and-minerals/mining-and-minerals/locatable-minerals/mining-claims/fees";
+export const BLM_MAINTENANCE_SOURCE_REVIEWED_AT = "2026-09-21";
 
 export interface TrackedDeadline {
   id: string;
@@ -71,6 +76,48 @@ export function parseTrackedDeadlines(raw: string | null): TrackedDeadline[] {
   } catch {
     return [];
   }
+}
+
+/**
+ * Builds reminder targets from BLM's published annual schedule. These are not a
+ * filing determination: ownership count, claim status, state filings, form
+ * eligibility, fees, and actual receipt still require current agency review.
+ */
+export function createBlmMaintenanceDeadlines(input: {
+  calendarYear: number;
+  path: MaintenancePath;
+  waiverEligibilityConfirmed?: boolean;
+}): TrackedDeadline[] {
+  if (!Number.isInteger(input.calendarYear) || input.calendarYear < 2000 || input.calendarYear > 2200)
+    throw new Error("Choose a valid maintenance calendar year.");
+  if (input.path !== "fee" && input.path !== "waiver")
+    throw new Error("Choose the maintenance-fee or waiver path.");
+  if (input.path === "waiver" && input.waiverEligibilityConfirmed !== true)
+    throw new Error("Confirm the current BLM waiver ownership limit before tracking waiver dates.");
+
+  const common = {
+    kind: "maintenance" as const,
+    authority: "U.S. Bureau of Land Management",
+    sourceUrl: BLM_MAINTENANCE_SOURCE_URL,
+    verifiedAt: BLM_MAINTENANCE_SOURCE_REVIEWED_AT,
+    manuallyVerified: true,
+  };
+  const september = createTrackedDeadline({
+    ...common,
+    label: input.path === "fee"
+      ? "BLM annual maintenance fee — verify amount and submit"
+      : "BLM maintenance fee waiver certification — verify eligibility and submit",
+    dueDate: `${input.calendarYear}-09-01`,
+  });
+  if (input.path === "fee") return [september];
+  return [
+    september,
+    createTrackedDeadline({
+      ...common,
+      label: "BLM waiver follow-up — assessment affidavit or notice of intent to hold",
+      dueDate: `${input.calendarYear}-12-30`,
+    }),
+  ];
 }
 
 const CALENDAR_WARNING =
