@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { assessBlmLayerMetadata, BLM_ACTIVE_CLAIMS_LAYER } from "@claimgrid/core";
+import { assessBlmLayerMetadata, BLM_ACTIVE_CLAIMS_LAYER, createSafeServerErrorEvent } from "@claimgrid/core";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,7 +23,7 @@ export async function GET(){
       freshnessCaveat:"Service availability and an edit timestamp do not establish legal currency, completeness, or land availability. Verify authoritative records and land status before acting."
     },{status:assessment.compatible?200:503,headers:{"Cache-Control":"public, s-maxage=300, stale-while-revalidate=300"}});
   }catch(error){
-    console.error("BLM source health check failed",error);
+    console.error(JSON.stringify(createSafeServerErrorEvent({ error, method: "GET", route: "/api/health/sources", routeType: "route", release: process.env.VERCEL_GIT_COMMIT_SHA })));
     return NextResponse.json({status:"unavailable",source:"U.S. Bureau of Land Management — MLRS Active Mining Claims",sourceUrl:BLM_ACTIVE_CLAIMS_LAYER,checkedAt,schemaCompatible:false,issues:["The official source could not be verified."],freshnessCaveat:"No availability or legal conclusion can be drawn while the source is unavailable."},{status:503,headers:{"Cache-Control":"no-store"}});
   }
 }
