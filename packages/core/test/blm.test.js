@@ -22,6 +22,7 @@ const {
   arizonaWorkflow,
   californiaWorkflow,
   coloradoWorkflow,
+  idahoWorkflow,
   nevadaWorkflow,
   oregonWorkflow,
   utahWorkflow,
@@ -823,6 +824,24 @@ test("Colorado workflow uses source-dated authoritative records", () => {
 test("Colorado progress rejects other-state and unknown gates", () => {
   const ids = coloradoWorkflow.steps.map((step) => step.id);
   assert.deepEqual(parseWorkflowProgress('["co-status","ut-status","fake","co-status"]', ids), ["co-status"]);
+});
+
+test("Idaho workflow separates claim location from stream authorization", () => {
+  assert.equal(idahoWorkflow.state, "ID");
+  assert.match(idahoWorkflow.notice, /mapped gap/i);
+  assert.ok(idahoWorkflow.steps.some((step) => /stream permits/i.test(step.title)));
+  assert.ok(idahoWorkflow.steps.some((step) => /does not itself authorize/i.test(step.description)));
+  assert.ok(idahoWorkflow.steps.some((step) => step.phase === "county"));
+});
+test("Idaho workflow uses source-dated authoritative records", () => {
+  assert.ok(idahoWorkflow.sources.every((source) => source.checkedAt === "2026-09-21"));
+  assert.ok(idahoWorkflow.sources.some((source) => source.authority === "Idaho Legislature"));
+  assert.ok(idahoWorkflow.sources.some((source) => source.authority === "Idaho Department of Water Resources"));
+  assert.ok(idahoWorkflow.sources.every((source) => source.url.startsWith("https://")));
+});
+test("Idaho progress rejects other-state and unknown gates", () => {
+  const ids = idahoWorkflow.steps.map((step) => step.id);
+  assert.deepEqual(parseWorkflowProgress('["id-status","co-status","fake","id-status"]', ids), ["id-status"]);
 });
 
 test("accepts a custom research viewport anywhere in the supported US extent", () => {

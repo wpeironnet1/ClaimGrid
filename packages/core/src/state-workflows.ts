@@ -156,6 +156,28 @@ export const coloradoWorkflow: StateWorkflow = {
   ]
 };
 
+export const idahoWorkflow: StateWorkflow = {
+  state: "ID",
+  title: "Idaho claim-location research checklist",
+  reviewedAt: "2026-09-21",
+  notice: "This checklist organizes official sources; it does not determine mineral-entry status, validate discovery, authorize access or stream disturbance, or certify compliance. A mapped gap and federal surface management do not establish legal availability.",
+  steps: [
+    { id: "id-status", phase: "research", title: "Verify land and mineral-entry status", description: "Identify the legal description, surface manager, mineral estate, existing claims, withdrawals, closures, and special-area restrictions using current BLM title and case records. Never infer availability from an empty map area.", verification: "Save source dates and confirm uncertain status with the responsible BLM Idaho office and surface manager." },
+    { id: "id-access", phase: "research", title: "Check access and surface-use authorization", description: "Determine lawful access and whether the surface manager requires authorization, a notice, a plan of operations, or other permits. A mining claim does not itself authorize private access, motorized use, excavation, or disturbance.", verification: "Confirm access and proposed-activity requirements with every responsible landowner and agency before field work." },
+    { id: "id-stream", phase: "research", title: "Separate claim location from stream permits", description: "If any activity would alter a stream channel below the mean high-water mark, review current Idaho Department of Water Resources small-scale mining and Stream Channel Protection Act requirements separately from the federal claim process.", verification: "Obtain a written applicability or permit determination from IDWR before in-stream work; claim location is not stream-channel authorization." },
+    { id: "id-county", phase: "research", title: "Confirm county and claim-type rules", description: "Identify each Idaho county containing the proposed claim and review current Idaho Code Title 47, Chapter 6 for the applicable claim type, notice, monuments, description, and recording requirements.", verification: "Confirm current deadlines, formatting, fees, and accepted filing methods directly with each applicable county recorder." },
+    { id: "id-field", phase: "field", title: "Inspect and document the physical site", description: "Check lawful access, existing monuments, conflicting occupation, protected resources, and evidence of a valuable locatable mineral before treating the project as a location. Avoid unauthorized ground or stream disturbance.", verification: "Online screening and phone GPS cannot establish discovery, legal boundaries, ownership, or availability." },
+    { id: "id-record", phase: "county", title: "Mark and record under current Idaho rules", description: "Follow the current Idaho method for the claim type, then prepare and record the required location notice in the correct county within the applicable deadline. Ensure the recorded description agrees with the physical location.", verification: "Retain field evidence, the recorded copy, receipt, document number, and timely-delivery evidence; recorder acceptance does not establish validity." },
+    { id: "id-blm", phase: "federal", title: "Record with BLM", description: "File the required location notice or certificate, map, claimant information, and current fees with BLM within 90 days after physical location, even if Idaho requires earlier county action.", verification: "Confirm BLM receipt, assigned serial number, and the resulting MLRS record; filing does not cure an invalid location." }
+  ],
+  sources: [
+    { label: "Idaho Code — Title 47, Chapter 6", authority: "Idaho Legislature", checkedAt: "2026-09-21", url: "https://legislature.idaho.gov/statutesrules/idstat/Title47/T47CH6/" },
+    { label: "Idaho water-resource protection and small-scale mining", authority: "Idaho Department of Water Resources", checkedAt: "2026-09-21", url: "https://idwr.idaho.gov/water-resource-protection-safety/" },
+    { label: "BLM — Recording a Mining Claim or Site", authority: "U.S. Bureau of Land Management", checkedAt: "2026-09-21", url: "https://www.blm.gov/programs/energy-and-minerals/mining-and-minerals/locatable-minerals/mining-claims/recording" },
+    { label: "Mineral & Land Records System", authority: "U.S. Bureau of Land Management", checkedAt: "2026-09-21", url: "https://mlrs.blm.gov/" }
+  ]
+};
+
 export function parseWorkflowProgress(raw: string | null, allowedIds: readonly string[]): string[] {
   if (!raw) return [];
   try {
