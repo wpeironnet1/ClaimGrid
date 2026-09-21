@@ -87,6 +87,53 @@ body {
     scroll-behavior: auto !important;
   }
 }
+.recoveryPage {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #f5f1e7;
+  color: #172018;
+}
+.recoveryPage section {
+  width: min(620px, 100%);
+  padding: clamp(26px, 6vw, 54px);
+  border: 1px solid #d7d0c4;
+  border-radius: 14px;
+  background: #fffdf7;
+}
+.recoveryPage section > span {
+  color: #9b583d;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .15em;
+}
+.recoveryPage h1 {
+  margin: 14px 0 20px;
+  font-size: clamp(40px, 7vw, 64px);
+  line-height: 1;
+}
+.recoveryPage p, .recoveryPage small {
+  color: #59645a;
+  line-height: 1.55;
+}
+.recoveryPage div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 28px 0;
+}
+.recoveryPage button, .recoveryPage a {
+  border: 1px solid #9b583d;
+  border-radius: 6px;
+  padding: 13px 18px;
+  background: #9b583d;
+  color: white;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+}
+.recoveryPage a { background: transparent; color: #7f432f; }
 .shell {
   width: min(1180px, calc(100% - 40px));
   margin: auto;
