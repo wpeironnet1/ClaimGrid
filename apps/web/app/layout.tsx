@@ -1,7 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import "./styles.css";
+import { getPublicSiteOrigin } from "../lib/site-origin";
+
+const publicSiteOrigin = getPublicSiteOrigin();
 
 export const metadata: Metadata = {
+  ...(publicSiteOrigin ? { metadataBase: new URL(publicSiteOrigin) } : {}),
   title: "ClaimGrid — Find your ground",
   description:
     "Research federal mineral lands and organize a mining claim from map to filing.",
