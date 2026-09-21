@@ -4,6 +4,7 @@ import * as Location from "expo-location";
 import * as ImagePicker from "expo-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { addFieldObservation, createFieldObservation, describeGpsQuality, mergeFieldEvidence, parseFieldEvidenceImport, parseFieldObservations, serializeFieldEvidence, type FieldObservation, type FieldObservationKind } from "@claimgrid/core";
+import { persistFieldPhoto, removeManagedFieldPhoto } from "../lib/field-photo-storage";
 
 const STORAGE_KEY = "claimgrid.field-observations.v1";
 
@@ -24,8 +25,10 @@ export default function FieldCapture() {
   useEffect(() => { AsyncStorage.getItem(STORAGE_KEY).then(raw => setRecords(parseFieldObservations(raw))).catch(() => undefined); }, []);
 
   async function saveRecords(next: FieldObservation[]) {
-    setRecords(next);
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    setRecords(next);
+    const retainedPhotos = new Set(next.map(item => item.photoUri).filter((uri): uri is string => Boolean(uri)));
+    await Promise.allSettled(records.filter(item => item.photoUri && !retainedPhotos.has(item.photoUri)).map(item => removeManagedFieldPhoto(item.photoUri)));
   }
 
   async function capture() {
@@ -34,9 +37,22 @@ export default function FieldCapture() {
       const permission = await Location.requestForegroundPermissionsAsync();
       if (permission.status !== "granted") { Alert.alert("Location permission needed", "ClaimGrid only reads location when you tap Capture GPS observation."); return; }
       const position = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
-      const record = createFieldObservation({ kind, note, latitude: position.coords.latitude, longitude: position.coords.longitude, horizontalAccuracyMeters: position.coords.accuracy, altitudeMeters: position.coords.altitude, capturedAt: new Date(position.timestamp).toISOString(), photoUri });
+      let record = createFieldObservation({ kind, note, latitude: position.coords.latitude, longitude: position.coords.longitude, horizontalAccuracyMeters: position.coords.accuracy, altitudeMeters: position.coords.altitude, capturedAt: new Date(position.timestamp).toISOString(), photoUri: null });
+      if (photoUri) {
+        try {
+          record = { ...record, photoUri: await persistFieldPhoto(photoUri, record.id) };
+        } catch {
+          Alert.alert("Photo not saved", "The camera image could not be copied into durable app storage. The GPS observation and note will still be saved without the photo.");
+        }
+      }
       const next = addFieldObservation(records, record);
-      await saveRecords(next); setNote(""); setPhotoUri(null);
+      try {
+        await saveRecords(next);
+      } catch (error) {
+        await removeManagedFieldPhoto(record.photoUri).catch(() => undefined);
+        throw error;
+      }
+      setNote(""); setPhotoUri(null);
     } catch (error) { Alert.alert("Unable to capture GPS", error instanceof Error ? error.message : "Try again with a clear view of the sky."); }
     finally { setCapturing(false); }
   }
@@ -49,7 +65,7 @@ export default function FieldCapture() {
   }
 
   function remove(record: FieldObservation) {
-    Alert.alert("Delete field observation?", "This removes the on-device record and cannot be undone.", [{ text: "Cancel", style: "cancel" }, { text: "Delete", style: "destructive", onPress: () => { void saveRecords(records.filter(item => item.id !== record.id)); } }]);
+    Alert.alert("Delete field observation?", "This removes the on-device record and its managed photo. It cannot be undone.", [{ text: "Cancel", style: "cancel" }, { text: "Delete", style: "destructive", onPress: () => { void saveRecords(records.filter(item => item.id !== record.id)).catch(() => Alert.alert("Delete failed", "The observation remains saved. Try again before clearing app storage.")); } }]);
   }
 
   async function exportRecords() {
