@@ -43,7 +43,9 @@ const {
   parseTrackedDeadlines,
 } = require("../dist/deadline.js");
 const {
+  parseFederalPacket,
   parseNevadaPacket,
+  reviewFederalPacket,
   reviewNevadaPacket,
 } = require("../dist/document-packet.js");
 const { webSecurityHeaders } = require("../dist/security.js");
@@ -396,6 +398,24 @@ test("identifies missing packet and map elements", () => {
 });
 test("safely rejects malformed packet drafts", () =>
   assert.equal(parseNevadaPacket('{"claimName":1}'), null));
+test("federal packet remains agency-review-required when every worksheet field is present", () => {
+  const review=reviewFederalPacket({claimName:"North Wash",claimType:"placer",locatorNames:"Example Locator",mailingAddress:"PO Box 1",state:"UT",county:"Tooele",locationDate:"2026-09-20",acreage:"20",landDescription:"T1S R2W Section 3",countyDocumentNumber:"2026-001",countyCopyReady:true,mapAttached:true,mapMatchesLocation:true,currentFeesChecked:true});
+  assert.equal(review.status,"agency-review-required");
+  assert.equal(review.completed,review.total);
+  assert.match(review.warnings.join(" "),/does not create/i);
+});
+test("federal packet identifies missing county, map, acreage, and fee checks", () => {
+  const review=reviewFederalPacket({claimName:"North Wash",claimType:"placer",locatorNames:"Example Locator",mailingAddress:"PO Box 1",state:"UT",county:"",locationDate:"2026-09-20",acreage:"0",landDescription:"T1S R2W Section 3",countyDocumentNumber:"",countyCopyReady:false,mapAttached:false,mapMatchesLocation:false,currentFeesChecked:false});
+  assert.equal(review.status,"incomplete");
+  assert.ok(review.missing.some(item=>/acreage/i.test(item)));
+  assert.ok(review.missing.some(item=>/county recording/i.test(item)));
+  assert.ok(review.missing.some(item=>/map/i.test(item)));
+});
+test("federal packet parser rejects malformed, oversized, and unsafe records", () => {
+  assert.equal(parseFederalPacket('{"claimName":1}'),null);
+  assert.equal(parseFederalPacket(JSON.stringify({claimName:"A",claimType:"placer",locatorNames:"L",mailingAddress:"M",state:"Utah",county:"C",locationDate:"2026-09-20",acreage:"20",landDescription:"D",countyDocumentNumber:"N",countyCopyReady:true,mapAttached:true,mapMatchesLocation:true,currentFeesChecked:true})),null);
+  assert.equal(parseFederalPacket("x".repeat(20_001)),null);
+});
 test("defines each production security header once", () => {
   const names = webSecurityHeaders.map((header) => header.key.toLowerCase());
   assert.equal(new Set(names).size, names.length);

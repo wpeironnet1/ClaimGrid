@@ -1,6 +1,6 @@
 export const PUBLIC_SITE_PATHS = [
   "/", "/explore", "/claim/nevada", "/claim/arizona", "/claim/california", "/claim/oregon", "/claim/utah",
-  "/claim/new", "/deadlines", "/documents/nevada", "/legal", "/pricing", "/privacy"
+  "/claim/new", "/deadlines", "/documents/nevada", "/documents/blm", "/legal", "/pricing", "/privacy"
 ] as const;
 
 export function normalizePublicSiteOrigin(value: string | null | undefined): string | null {
