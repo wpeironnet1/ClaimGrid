@@ -11,6 +11,7 @@ export const claimGridLocalRecords: readonly LocalRecordDefinition[] = [
   { key: "claimgrid.workflow.ca.v1", label: "California workflow progress", description: "Completed California verification gates." },
   { key: "claimgrid.workflow.or.v1", label: "Oregon workflow progress", description: "Completed Oregon verification gates." },
   { key: "claimgrid.workflow.ut.v1", label: "Utah workflow progress", description: "Completed Utah verification gates." },
+  { key: "claimgrid.workflow.co.v1", label: "Colorado workflow progress", description: "Completed Colorado verification gates." },
   { key: "claimgrid.deadlines.v1", label: "Tracked deadlines", description: "Federal and source-confirmed county filing dates." },
   { key: "claimgrid.packet.nv.v1", label: "Nevada document worksheet", description: "Locators, land description, and map cross-checks." },
   { key: "claimgrid.packet.blm.v1", label: "BLM recording worksheet", description: "Claimant, county-recording, map, acreage, and fee cross-checks." }

@@ -21,6 +21,7 @@ const { createClaimDraft, parseClaimDraft } = require("../dist/claim-draft.js");
 const {
   arizonaWorkflow,
   californiaWorkflow,
+  coloradoWorkflow,
   nevadaWorkflow,
   oregonWorkflow,
   utahWorkflow,
@@ -805,6 +806,23 @@ test("Utah workflow uses source-dated authoritative records", () => {
 test("Utah progress rejects other-state and unknown gates", () => {
   const ids = utahWorkflow.steps.map((step) => step.id);
   assert.deepEqual(parseWorkflowProgress('["ut-status","or-status","fake","ut-status"]', ids), ["ut-status"]);
+});
+
+test("Colorado workflow preserves land-status, access, and recording gates", () => {
+  assert.equal(coloradoWorkflow.state, "CO");
+  assert.match(coloradoWorkflow.notice, /empty claim map/i);
+  assert.ok(coloradoWorkflow.steps.some((step) => /surface-use/i.test(step.title)));
+  assert.ok(coloradoWorkflow.steps.some((step) => step.phase === "county"));
+  assert.ok(coloradoWorkflow.steps.some((step) => /discovery work/i.test(step.description)));
+});
+test("Colorado workflow uses source-dated authoritative records", () => {
+  assert.ok(coloradoWorkflow.sources.every((source) => source.checkedAt === "2026-09-21"));
+  assert.ok(coloradoWorkflow.sources.some((source) => source.authority === "Colorado General Assembly"));
+  assert.ok(coloradoWorkflow.sources.every((source) => source.url.startsWith("https://")));
+});
+test("Colorado progress rejects other-state and unknown gates", () => {
+  const ids = coloradoWorkflow.steps.map((step) => step.id);
+  assert.deepEqual(parseWorkflowProgress('["co-status","ut-status","fake","co-status"]', ids), ["co-status"]);
 });
 
 test("accepts a custom research viewport anywhere in the supported US extent", () => {

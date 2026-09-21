@@ -134,6 +134,28 @@ export const utahWorkflow: StateWorkflow = {
   ]
 };
 
+export const coloradoWorkflow: StateWorkflow = {
+  state: "CO",
+  title: "Colorado claim-location research checklist",
+  reviewedAt: "2026-09-21",
+  notice: "This checklist organizes official sources; it does not determine mineral-entry status, validate discovery, authorize access or surface disturbance, or certify compliance. Public-land appearance and an empty claim map do not establish legal availability.",
+  steps: [
+    { id: "co-status", phase: "research", title: "Verify land and mineral-entry status", description: "Identify the legal description, surface manager, mineral estate, existing claims, withdrawals, closures, and special-area restrictions using current BLM title and case records. Do not treat a mapped gap as land open to location.", verification: "Save source dates and confirm uncertain status with the responsible BLM Colorado office and surface manager." },
+    { id: "co-access", phase: "research", title: "Check access and surface-use authorization", description: "Determine who manages the surface and whether private access permission, agency authorization, a notice, a plan of operations, or other permits are required. Claim location alone does not authorize entry, vehicle use, or disturbance.", verification: "Confirm access and proposed-activity requirements with every responsible landowner and agency before field work." },
+    { id: "co-county", phase: "research", title: "Confirm county and claim-type rules", description: "Identify each Colorado county containing the proposed claim and review current Colorado Revised Statutes Title 34, including Article 43, for the applicable claim type, notice, monuments, discovery work, description, and recording requirements.", verification: "Confirm current deadlines, formatting, fees, and accepted filing methods directly with each applicable county clerk and recorder." },
+    { id: "co-field", phase: "field", title: "Inspect the site and discovery evidence", description: "Check lawful access, prior monuments, conflicting occupation, cultural and protected resources, and evidence of a valuable locatable mineral before treating the project as a location.", verification: "Online screening and phone GPS cannot establish discovery, legal boundaries, ownership, or availability." },
+    { id: "co-location", phase: "field", title: "Post, mark, and document the location", description: "Follow the current Colorado method for the claim type. Preserve actual posting and location dates, notice details, boundary and monument evidence, legal description, coordinates, photographs, and any required discovery work without disturbing protected resources.", verification: "Compare the field plan with current Colorado Title 34 and federal location requirements immediately before acting." },
+    { id: "co-record", phase: "county", title: "Record with the county", description: "Prepare and record the required location certificate or notice in the correct county within the applicable Colorado deadline. Ensure the recorded description agrees with the physical location and claim type.", verification: "Retain the recorded copy, receipt, document number, and timely-delivery evidence; recorder acceptance does not establish validity." },
+    { id: "co-blm", phase: "federal", title: "Record with BLM", description: "File the required location notice or certificate, map, claimant information, and current fees with BLM within 90 days after physical location, even if Colorado requires earlier county action.", verification: "Confirm BLM receipt, assigned serial number, and the resulting MLRS record; filing does not cure an invalid location." }
+  ],
+  sources: [
+    { label: "Colorado Revised Statutes — Title 34", authority: "Colorado General Assembly", checkedAt: "2026-09-21", url: "https://leg.colorado.gov/sites/default/files/images/olls/crs2025-title-34.pdf" },
+    { label: "BLM — Recording a Mining Claim or Site", authority: "U.S. Bureau of Land Management", checkedAt: "2026-09-21", url: "https://www.blm.gov/programs/energy-and-minerals/mining-and-minerals/locatable-minerals/mining-claims/recording" },
+    { label: "Electronic Code of Federal Regulations — 43 CFR Part 3832", authority: "U.S. Government Publishing Office", checkedAt: "2026-09-21", url: "https://www.ecfr.gov/current/title-43/subtitle-B/chapter-II/subchapter-C/part-3830/subpart-3832" },
+    { label: "Mineral & Land Records System", authority: "U.S. Bureau of Land Management", checkedAt: "2026-09-21", url: "https://mlrs.blm.gov/" }
+  ]
+};
+
 export function parseWorkflowProgress(raw: string | null, allowedIds: readonly string[]): string[] {
   if (!raw) return [];
   try {

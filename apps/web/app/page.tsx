@@ -1,6 +1,7 @@
 import {
   arizonaWorkflow,
   californiaWorkflow,
+  coloradoWorkflow,
   federalWorkflow,
   nevadaWorkflow,
   oregonWorkflow,
@@ -42,6 +43,13 @@ const stateGuides = [
     href: "/claim/utah",
     note: "Mineral-entry, access, monument, and recording checks",
     tone: "rust",
+  },
+  {
+    workflow: coloradoWorkflow,
+    name: "Colorado",
+    href: "/claim/colorado",
+    note: "Land-status, access, discovery-work, and recording checks",
+    tone: "sage",
   },
 ];
 
