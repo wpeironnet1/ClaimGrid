@@ -14,6 +14,7 @@ test("public discovery routes never expose API endpoints", () => {
   assert.ok(PUBLIC_SITE_PATHS.includes("/explore"));
   assert.ok(PUBLIC_SITE_PATHS.includes("/legal"));
   assert.ok(PUBLIC_SITE_PATHS.includes("/claim/oregon"));
+  assert.ok(PUBLIC_SITE_PATHS.includes("/claim/utah"));
   assert.equal(PUBLIC_SITE_PATHS.some(path => path.startsWith("/api/")), false);
   assert.equal(new Set(PUBLIC_SITE_PATHS).size, PUBLIC_SITE_PATHS.length);
 });

@@ -4,6 +4,7 @@ import {
   federalWorkflow,
   nevadaWorkflow,
   oregonWorkflow,
+  utahWorkflow,
 } from "@claimgrid/core";
 
 const stateGuides = [
@@ -34,6 +35,13 @@ const stateGuides = [
     href: "/claim/oregon",
     note: "Claim-type, land-status, access, and recording checks",
     tone: "gold",
+  },
+  {
+    workflow: utahWorkflow,
+    name: "Utah",
+    href: "/claim/utah",
+    note: "Mineral-entry, access, monument, and recording checks",
+    tone: "rust",
   },
 ];
 

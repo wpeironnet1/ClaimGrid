@@ -112,6 +112,28 @@ export const oregonWorkflow: StateWorkflow = {
   ]
 };
 
+export const utahWorkflow: StateWorkflow = {
+  state: "UT",
+  title: "Utah claim-location research checklist",
+  reviewedAt: "2026-09-21",
+  notice: "This checklist organizes official sources; it does not determine mineral-entry status, validate discovery, authorize access or surface disturbance, or certify compliance. Public-land appearance and an empty claim map do not establish legal availability.",
+  steps: [
+    { id: "ut-status", phase: "research", title: "Verify land and mineral-entry status", description: "Identify the legal description, surface manager, mineral estate, existing claims, withdrawals, closures, and special designations using current BLM title and case records. Do not treat a mapped gap as land open to location.", verification: "Save source dates and confirm uncertain status with the responsible BLM Utah field office." },
+    { id: "ut-access", phase: "research", title: "Check access and surface-use authorization", description: "Determine who manages the surface and whether private access permission, agency authorization, a notice, a plan of operations, or other permits are required. Claim location alone does not authorize entry or disturbance.", verification: "Confirm access and proposed-activity requirements with every responsible landowner and agency before field work." },
+    { id: "ut-county", phase: "research", title: "Confirm county and claim-type rules", description: "Identify each Utah county containing the proposed claim and review current Utah Code Title 40, Chapter 1 requirements for the applicable claim type, notice, monuments, description, and county recording.", verification: "Confirm current deadlines, formatting, fees, and filing methods directly with each applicable county recorder." },
+    { id: "ut-field", phase: "field", title: "Inspect the site and discovery evidence", description: "Check lawful access, prior monuments, conflicting occupation, cultural and protected resources, and evidence of a valuable locatable mineral before treating the project as a location.", verification: "Online screening and phone GPS cannot establish discovery, legal boundaries, ownership, or availability." },
+    { id: "ut-location", phase: "field", title: "Post, mark, and document the location", description: "Follow the current Utah method for the claim type. Preserve actual posting and location dates, notice details, boundary and monument evidence, legal description, coordinates, and photographs without disturbing protected resources.", verification: "Compare the field plan with current Utah Code and federal location requirements immediately before acting." },
+    { id: "ut-record", phase: "county", title: "Record with the county", description: "Prepare and record the required location notice in the correct county within the applicable Utah deadline. Ensure the recorded description agrees with the physical location and claim type.", verification: "Retain the recorded copy, receipt, document number, and timely-delivery evidence; recorder acceptance does not establish validity." },
+    { id: "ut-blm", phase: "federal", title: "Record with BLM", description: "File the required location notice or certificate, map, claimant information, and current fees with BLM within 90 days after physical location, even if Utah requires an earlier county filing.", verification: "Confirm BLM receipt, assigned serial number, and the resulting MLRS record; filing does not cure an invalid location." }
+  ],
+  sources: [
+    { label: "Utah Code — Title 40, Chapter 1", authority: "Utah Legislature", checkedAt: "2026-09-21", url: "https://le.utah.gov/xcode/Title40/Chapter1/40-1.html" },
+    { label: "BLM — Recording a Mining Claim or Site", authority: "U.S. Bureau of Land Management", checkedAt: "2026-09-21", url: "https://www.blm.gov/programs/energy-and-minerals/mining-and-minerals/locatable-minerals/mining-claims/recording" },
+    { label: "Electronic Code of Federal Regulations — 43 CFR Part 3833", authority: "U.S. Government Publishing Office", checkedAt: "2026-09-21", url: "https://www.ecfr.gov/current/title-43/subtitle-B/chapter-II/subchapter-C/part-3830/subpart-3833" },
+    { label: "Mineral & Land Records System", authority: "U.S. Bureau of Land Management", checkedAt: "2026-09-21", url: "https://mlrs.blm.gov/" }
+  ]
+};
+
 export function parseWorkflowProgress(raw: string | null, allowedIds: readonly string[]): string[] {
   if (!raw) return [];
   try {

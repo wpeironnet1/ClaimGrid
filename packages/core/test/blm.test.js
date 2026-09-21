@@ -22,6 +22,7 @@ const {
   californiaWorkflow,
   nevadaWorkflow,
   oregonWorkflow,
+  utahWorkflow,
   parseWorkflowProgress,
 } = require("../dist/state-workflows.js");
 const {
@@ -737,6 +738,22 @@ test("Oregon workflow uses source-dated authoritative records", () => {
 test("Oregon progress rejects other-state and unknown gates", () => {
   const ids = oregonWorkflow.steps.map((step) => step.id);
   assert.deepEqual(parseWorkflowProgress('["or-status","ca-status","fake","or-status"]', ids), ["or-status"]);
+});
+
+test("Utah workflow preserves land-status, access, and recording gates", () => {
+  assert.equal(utahWorkflow.state, "UT");
+  assert.match(utahWorkflow.notice, /empty claim map/i);
+  assert.ok(utahWorkflow.steps.some((step) => /surface-use/i.test(step.title)));
+  assert.ok(utahWorkflow.steps.some((step) => step.phase === "county"));
+});
+test("Utah workflow uses source-dated authoritative records", () => {
+  assert.ok(utahWorkflow.sources.every((source) => source.checkedAt === "2026-09-21"));
+  assert.ok(utahWorkflow.sources.some((source) => source.authority === "Utah Legislature"));
+  assert.ok(utahWorkflow.sources.every((source) => source.url.startsWith("https://")));
+});
+test("Utah progress rejects other-state and unknown gates", () => {
+  const ids = utahWorkflow.steps.map((step) => step.id);
+  assert.deepEqual(parseWorkflowProgress('["ut-status","or-status","fake","ut-status"]', ids), ["ut-status"]);
 });
 
 test("accepts a custom research viewport anywhere in the supported US extent", () => {
