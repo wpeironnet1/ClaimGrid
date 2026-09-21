@@ -24,23 +24,48 @@ export interface FieldObservationInput {
   photoUri?: string | null;
 }
 
-export function createFieldObservation(input: FieldObservationInput, id = `field-${Date.now()}`): FieldObservation {
+const FIELD_EVIDENCE_IMPORT_MAX_BYTES = 1_000_000;
+const FIELD_CAPTURE_FUTURE_TOLERANCE_MS = 5 * 60 * 1000;
+const FIELD_ACCURACY_MAX_METERS = 100_000;
+const FIELD_ALTITUDE_MIN_METERS = -12_000;
+const FIELD_ALTITUDE_MAX_METERS = 100_000;
+const fieldObservationKinds: readonly FieldObservationKind[] = ["site", "monument", "corner-candidate", "sample", "access", "hazard"];
+
+function isSafeCaptureTime(value: string, now: Date): boolean {
+  const capturedAt = Date.parse(value);
+  return Number.isFinite(capturedAt) && capturedAt <= now.getTime() + FIELD_CAPTURE_FUTURE_TOLERANCE_MS;
+}
+
+function isSafeAccuracy(value: number | null): boolean {
+  return value === null || (Number.isFinite(value) && value >= 0 && value <= FIELD_ACCURACY_MAX_METERS);
+}
+
+function isSafeAltitude(value: number | null): boolean {
+  return value === null || (Number.isFinite(value) && value >= FIELD_ALTITUDE_MIN_METERS && value <= FIELD_ALTITUDE_MAX_METERS);
+}
+
+export function createFieldObservation(input: FieldObservationInput, id = `field-${Date.now()}`, now = new Date()): FieldObservation {
+  if (!fieldObservationKinds.includes(input.kind)) throw new Error("Observation type is invalid.");
+  const safeId = id.trim();
+  if (!safeId || safeId.length > 200) throw new Error("Observation identifier is invalid.");
   if (!Number.isFinite(input.latitude) || input.latitude < -90 || input.latitude > 90) throw new Error("Latitude is outside the valid range.");
   if (!Number.isFinite(input.longitude) || input.longitude < -180 || input.longitude > 180) throw new Error("Longitude is outside the valid range.");
   const accuracy = input.horizontalAccuracyMeters ?? null;
-  if (accuracy !== null && (!Number.isFinite(accuracy) || accuracy < 0)) throw new Error("GPS accuracy must be a positive distance.");
-  const capturedAt = input.capturedAt ?? new Date().toISOString();
-  if (Number.isNaN(Date.parse(capturedAt))) throw new Error("Capture time is invalid.");
+  if (!isSafeAccuracy(accuracy)) throw new Error("GPS accuracy is outside the safe evidence range.");
+  const altitude = input.altitudeMeters ?? null;
+  if (!isSafeAltitude(altitude)) throw new Error("GPS altitude is outside the safe evidence range.");
+  const capturedAt = input.capturedAt ?? now.toISOString();
+  if (!isSafeCaptureTime(capturedAt, now)) throw new Error("Capture time is invalid or too far in the future.");
   return {
-    id,
+    id: safeId,
     kind: input.kind,
     note: (input.note ?? "").trim().slice(0, 2000),
     latitude: input.latitude,
     longitude: input.longitude,
     horizontalAccuracyMeters: accuracy,
-    altitudeMeters: input.altitudeMeters ?? null,
+    altitudeMeters: altitude,
     capturedAt,
-    photoUri: input.photoUri?.trim() || null,
+    photoUri: input.photoUri?.trim().slice(0, 4000) || null,
     deviceReadingOnly: true
   };
 }
@@ -52,19 +77,13 @@ export function describeGpsQuality(accuracy: number | null): "unknown" | "strong
   return "weak";
 }
 
-export function parseFieldObservations(raw: string | null): FieldObservation[] {
+export function parseFieldObservations(raw: string | null, now = new Date()): FieldObservation[] {
   if (!raw) return [];
+  if (new TextEncoder().encode(raw).length > FIELD_EVIDENCE_IMPORT_MAX_BYTES) return [];
   try {
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    return parsed.filter((record): record is FieldObservation =>
-      typeof record?.id === "string" &&
-      typeof record?.kind === "string" &&
-      typeof record?.latitude === "number" && record.latitude >= -90 && record.latitude <= 90 &&
-      typeof record?.longitude === "number" && record.longitude >= -180 && record.longitude <= 180 &&
-      typeof record?.capturedAt === "string" && !Number.isNaN(Date.parse(record.capturedAt)) &&
-      record.deviceReadingOnly === true
-    ).slice(0, 250);
+    return parsed.filter(record => isImportedObservation(record, now)).slice(0, 250);
   } catch {
     return [];
   }
@@ -102,10 +121,7 @@ export interface FieldEvidenceImport {
   photoReferenceCount: number;
 }
 
-const FIELD_EVIDENCE_IMPORT_MAX_BYTES = 1_000_000;
-const fieldObservationKinds: readonly FieldObservationKind[] = ["site", "monument", "corner-candidate", "sample", "access", "hazard"];
-
-function isImportedObservation(value: unknown): value is FieldObservation {
+function isImportedObservation(value: unknown, now: Date): value is FieldObservation {
   if (!value || typeof value !== "object") return false;
   const record = value as Partial<FieldObservation>;
   return typeof record.id === "string" && record.id.length > 0 && record.id.length <= 200 &&
@@ -113,14 +129,14 @@ function isImportedObservation(value: unknown): value is FieldObservation {
     typeof record.note === "string" && record.note.length <= 2000 &&
     typeof record.latitude === "number" && Number.isFinite(record.latitude) && record.latitude >= -90 && record.latitude <= 90 &&
     typeof record.longitude === "number" && Number.isFinite(record.longitude) && record.longitude >= -180 && record.longitude <= 180 &&
-    (record.horizontalAccuracyMeters === null || (typeof record.horizontalAccuracyMeters === "number" && Number.isFinite(record.horizontalAccuracyMeters) && record.horizontalAccuracyMeters >= 0)) &&
-    (record.altitudeMeters === null || (typeof record.altitudeMeters === "number" && Number.isFinite(record.altitudeMeters))) &&
-    typeof record.capturedAt === "string" && !Number.isNaN(Date.parse(record.capturedAt)) &&
+    (record.horizontalAccuracyMeters === null || (typeof record.horizontalAccuracyMeters === "number" && isSafeAccuracy(record.horizontalAccuracyMeters))) &&
+    (record.altitudeMeters === null || (typeof record.altitudeMeters === "number" && isSafeAltitude(record.altitudeMeters))) &&
+    typeof record.capturedAt === "string" && isSafeCaptureTime(record.capturedAt, now) &&
     (record.photoUri === null || (typeof record.photoUri === "string" && record.photoUri.length <= 4000)) &&
     record.deviceReadingOnly === true;
 }
 
-export function parseFieldEvidenceImport(raw: string): FieldEvidenceImport {
+export function parseFieldEvidenceImport(raw: string, now = new Date()): FieldEvidenceImport {
   if (!raw.trim()) throw new Error("Paste a ClaimGrid field evidence backup first.");
   if (new TextEncoder().encode(raw).length > FIELD_EVIDENCE_IMPORT_MAX_BYTES) throw new Error("The backup is larger than the 1 MB import limit.");
 
@@ -129,10 +145,10 @@ export function parseFieldEvidenceImport(raw: string): FieldEvidenceImport {
   if (!parsed || typeof parsed !== "object") throw new Error("The backup must be a ClaimGrid field evidence object.");
   const packet = parsed as Partial<FieldEvidenceExport>;
   if (packet.schema !== "claimgrid-field-evidence-v1") throw new Error("The backup schema is not supported.");
-  if (typeof packet.exportedAt !== "string" || Number.isNaN(Date.parse(packet.exportedAt))) throw new Error("The backup export time is invalid.");
+  if (typeof packet.exportedAt !== "string" || !isSafeCaptureTime(packet.exportedAt, now)) throw new Error("The backup export time is invalid or too far in the future.");
   if (packet.caveat !== FIELD_EVIDENCE_CAVEAT) throw new Error("The backup safety statement is missing or altered.");
   if (!Array.isArray(packet.observations) || packet.observations.length > 250) throw new Error("The backup must contain no more than 250 observations.");
-  if (!packet.observations.every(isImportedObservation)) throw new Error("One or more observations are malformed or unsafe to restore.");
+  if (!packet.observations.every(record => isImportedObservation(record, now))) throw new Error("One or more observations are malformed or unsafe to restore.");
   if (new Set(packet.observations.map(record => record.id)).size !== packet.observations.length) throw new Error("The backup contains duplicate observation IDs.");
 
   return {

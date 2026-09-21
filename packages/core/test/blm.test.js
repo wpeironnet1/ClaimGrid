@@ -226,6 +226,23 @@ test("rejects corrupted and non-evidence field storage", () => {
     [],
   );
 });
+test("rejects unsafe field measurement metadata", () => {
+  const now = new Date("2026-09-21T12:00:00Z");
+  assert.throws(() => createFieldObservation({ kind: "site", latitude: 38, longitude: -119, horizontalAccuracyMeters: Infinity }, "bad-accuracy", now), /accuracy/i);
+  assert.throws(() => createFieldObservation({ kind: "site", latitude: 38, longitude: -119, altitudeMeters: NaN }, "bad-altitude", now), /altitude/i);
+  assert.throws(() => createFieldObservation({ kind: "site", latitude: 38, longitude: -119, capturedAt: "2026-09-22T12:00:00Z" }, "future", now), /future/i);
+});
+test("filters malformed and future-dated local field records", () => {
+  const now = new Date("2026-09-21T12:00:00Z");
+  const safe = createFieldObservation({ kind: "site", latitude: 38, longitude: -119, capturedAt: "2026-09-21T11:00:00Z" }, "safe", now);
+  const unsafe = [
+    { ...safe, id: "bad-kind", kind: "boundary" },
+    { ...safe, id: "bad-note", note: 17 },
+    { ...safe, id: "bad-accuracy", horizontalAccuracyMeters: 200000 },
+    { ...safe, id: "future", capturedAt: "2026-09-22T12:00:00Z" },
+  ];
+  assert.deepEqual(parseFieldObservations(JSON.stringify([safe, ...unsafe]), now), [safe]);
+});
 test("deduplicates field records and keeps newest first", () => {
   const old = createFieldObservation(
     { kind: "site", latitude: 38, longitude: -119 },
@@ -323,6 +340,12 @@ test("rejects altered or malformed field evidence backups", () => {
       ),
     /duplicate/i,
   );
+});
+test("rejects future-dated field evidence backups", () => {
+  const now = new Date("2026-09-21T12:00:00Z");
+  const record = createFieldObservation({ kind: "site", latitude: 38, longitude: -119, capturedAt: "2026-09-21T11:00:00Z" }, "safe", now);
+  const packet = createFieldEvidenceExport([record], new Date("2026-09-22T12:00:00Z"));
+  assert.throws(() => parseFieldEvidenceImport(JSON.stringify(packet), now), /future/i);
 });
 test("classifies filing deadlines by urgency", () => {
   const today = new Date("2026-09-14T12:00:00Z");
