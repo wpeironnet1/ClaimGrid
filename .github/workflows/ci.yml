@@ -16,21 +16,32 @@ concurrency:
 jobs:
   validate:
     name: Test, typecheck, and build
-    runs-on: ubuntu-latest
+    # Pin the runner image so an upstream `ubuntu-latest` migration cannot
+    # silently change ClaimGrid's production validation environment.
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Use Node.js 22
-        uses: actions/setup-node@v4
+        uses: actions/checkout@v7
         with:
-          node-version: 22
+          persist-credentials: false
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
           cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Use the repository npm release
+        run: npm install --global npm@10.8.2
 
       - name: Install locked dependencies
         run: npm ci
+
+      - name: Reject critical production dependency advisories
+        run: npm audit --omit=dev --audit-level=critical
 
       - name: Run core tests
         run: npm test
