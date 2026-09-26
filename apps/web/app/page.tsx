@@ -3,6 +3,7 @@ import {
   californiaWorkflow,
   coloradoWorkflow,
   idahoWorkflow,
+  montanaWorkflow,
   federalWorkflow,
   nevadaWorkflow,
   oregonWorkflow,
@@ -59,6 +60,13 @@ const stateGuides = [
     note: "Land-status, access, stream-permit, and recording checks",
     tone: "gold",
   },
+  {
+    workflow: montanaWorkflow,
+    name: "Montana",
+    href: "/claim/montana",
+    note: "Land-status, surface-use, Montana permitting, and recording checks",
+    tone: "rust",
+  },
 ];
 
 export default function Home() {
@@ -92,7 +100,7 @@ export default function Home() {
         </p>
         <div className="actions">
           <a className="primary" href="/explore">
-            Open the live map <span>↗</span>
+            Open the live map <span>â</span>
           </a>
           <a href="#process">See how it works</a>
         </div>
@@ -130,7 +138,7 @@ export default function Home() {
             </div>
             <div className="mapControls">
               <button>+</button>
-              <button>−</button>
+              <button>â</button>
             </div>
           </div>
         </div>
@@ -167,12 +175,12 @@ export default function Home() {
           {stateGuides.map(({ workflow, name, href, note, tone }) => (
             <article key={workflow.state} className={`areaCard ${tone}`}>
               <span>
-                {workflow.state} · {workflow.steps.length} verification gates
+                {workflow.state} Â· {workflow.steps.length} verification gates
               </span>
               <h3>{name}</h3>
               <p>{note}</p>
               <a href={href} aria-label={`Open the ${name} claim workflow`}>
-                →
+                â
               </a>
             </article>
           ))}

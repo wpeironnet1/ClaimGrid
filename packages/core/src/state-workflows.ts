@@ -37,9 +37,9 @@ export const nevadaWorkflow: StateWorkflow = {
     { id: "record-blm", phase: "federal", title: "Record with BLM", description: "Submit the notice or certificate, map, claimant information and current fees to BLM within 90 days after the physical location date.", verification: "Confirm receipt and the assigned serial number in MLRS." }
   ],
   sources: [
-    { label: "Nevada Division of Minerals — Mining Claims", authority: "State of Nevada", checkedAt: "2026-09-13", url: "https://www.minerals.nv.gov/programs/mining/claims/" },
+    { label: "Nevada Division of Minerals â Mining Claims", authority: "State of Nevada", checkedAt: "2026-09-13", url: "https://www.minerals.nv.gov/programs/mining/claims/" },
     { label: "Nevada Revised Statutes, Chapter 517", authority: "Nevada Legislature", checkedAt: "2026-09-13", url: "https://www.leg.state.nv.us/nrs/nrs-517.html" },
-    { label: "BLM — Locatable Minerals and Mining Claims", authority: "U.S. Bureau of Land Management", checkedAt: "2026-09-13", url: "https://www.blm.gov/programs/energy-and-minerals/mining-and-minerals/locatable-minerals/mining-claims" },
+    { label: "BLM â Locatable Minerals and Mining Claims", authority: "U.S. Bureau of Land Management", checkedAt: "2026-09-13", url: "https://www.blm.gov/programs/energy-and-minerals/mining-and-minerals/locatable-minerals/mining-claims" },
     { label: "Mineral & Land Records System", authority: "U.S. Bureau of Land Management", checkedAt: "2026-09-13", url: "https://mlrs.blm.gov/" }
   ]
 };
@@ -60,9 +60,9 @@ export const arizonaWorkflow: StateWorkflow = {
     { id: "az-blm-record", phase: "federal", title: "Record with BLM", description: "Submit the required recorded location document, map, claimant information, and current fees to BLM within 90 days after physical location.", verification: "Confirm BLM receipt, serial number, and the resulting MLRS record." }
   ],
   sources: [
-    { label: "Arizona Revised Statutes — Title 27", authority: "Arizona Legislature", checkedAt: "2026-09-14", url: "https://www.azleg.gov/arsDetail/?title=27" },
-    { label: "Arizona Geological Survey — Mineral Rights", authority: "Arizona Geological Survey", checkedAt: "2026-09-14", url: "https://azgs.arizona.edu/mineral-resources/mineral-rights" },
-    { label: "BLM — Locatable Minerals and Mining Claims", authority: "U.S. Bureau of Land Management", checkedAt: "2026-09-14", url: "https://www.blm.gov/programs/energy-and-minerals/mining-and-minerals/locatable-minerals/mining-claims" },
+    { label: "Arizona Revised Statutes â Title 27", authority: "Arizona Legislature", checkedAt: "2026-09-14", url: "https://www.azleg.gov/arsDetail/?title=27" },
+    { label: "Arizona Geological Survey â Mineral Rights", authority: "Arizona Geological Survey", checkedAt: "2026-09-14", url: "https://azgs.arizona.edu/mineral-resources/mineral-rights" },
+    { label: "BLM â Locatable Minerals and Mining Claims", authority: "U.S. Bureau of Land Management", checkedAt: "2026-09-14", url: "https://www.blm.gov/programs/energy-and-minerals/mining-and-minerals/locatable-minerals/mining-claims" },
     { label: "Mineral & Land Records System", authority: "U.S. Bureau of Land Management", checkedAt: "2026-09-14", url: "https://mlrs.blm.gov/" }
   ]
 };
@@ -78,14 +78,14 @@ export const californiaWorkflow: StateWorkflow = {
     { id: "ca-access", phase: "research", title: "Check access and surface-use authorization", description: "Determine whether the parcel is managed by BLM, the Forest Service, another agency, or a nonfederal owner. Claim location does not itself authorize entry across private land or mining operations and surface disturbance.", verification: "Contact the surface-management agency before entry or disturbance; separate notices or plans may be required." },
     { id: "ca-county", phase: "research", title: "Confirm county and claim-type rules", description: "Identify every county containing the proposed claim and review current California Public Resources Code requirements for the applicable lode, placer, millsite, or tunnel right, together with recorder formatting, fee, and submission rules.", verification: "Confirm the current deadline and document standards directly with each applicable county recorder." },
     { id: "ca-field", phase: "field", title: "Inspect the site and discovery evidence", description: "Check access, existing monuments, conflicting occupation, protected resources, and evidence of a valuable locatable mineral before treating the project as a location.", verification: "Online screening and phone GPS cannot establish discovery, boundaries, or legal availability." },
-    { id: "ca-location", phase: "field", title: "Post, mark, and document the location", description: "Follow the current California method for the claim type. Preserve the actual posting and location dates, notice details, boundary or monument evidence, legal description, coordinates, and photographs without disturbing protected resources.", verification: "Compare the field plan with current Public Resources Code sections 3900–3924 immediately before acting." },
+    { id: "ca-location", phase: "field", title: "Post, mark, and document the location", description: "Follow the current California method for the claim type. Preserve the actual posting and location dates, notice details, boundary or monument evidence, legal description, coordinates, and photographs without disturbing protected resources.", verification: "Compare the field plan with current Public Resources Code sections 3900â3924 immediately before acting." },
     { id: "ca-record", phase: "county", title: "Record with the county", description: "Prepare and record the required notice and map or description in the appropriate county within the applicable California deadline. Make sure the recorded information agrees with the physical location.", verification: "Retain the recorder-stamped copy, receipt, document number, and evidence of timely delivery." },
     { id: "ca-blm", phase: "federal", title: "Record with BLM", description: "File the required location notice or certificate, map, claimant information, and current fees with BLM within 90 days after physical location, even if a state deadline is sooner.", verification: "Confirm BLM receipt, assigned serial number, and the resulting MLRS record; filing does not cure an invalid location." }
   ],
   sources: [
-    { label: "California Public Resources Code — Division 3.5", authority: "California Legislature", checkedAt: "2026-09-14", url: "https://leginfo.legislature.ca.gov/faces/codes_displayexpandedbranch.xhtml?tocCode=PRC&division=3.5." },
-    { label: "BLM — Recording a Mining Claim or Site", authority: "U.S. Bureau of Land Management", checkedAt: "2026-09-14", url: "https://www.blm.gov/programs/energy-and-minerals/mining-and-minerals/locatable-minerals/mining-claims/recording" },
-    { label: "Electronic Code of Federal Regulations — 43 CFR Part 3833", authority: "U.S. Government Publishing Office", checkedAt: "2026-09-14", url: "https://www.ecfr.gov/current/title-43/subtitle-B/chapter-II/subchapter-C/part-3830/subpart-3833" },
+    { label: "California Public Resources Code â Division 3.5", authority: "California Legislature", checkedAt: "2026-09-14", url: "https://leginfo.legislature.ca.gov/faces/codes_displayexpandedbranch.xhtml?tocCode=PRC&division=3.5." },
+    { label: "BLM â Recording a Mining Claim or Site", authority: "U.S. Bureau of Land Management", checkedAt: "2026-09-14", url: "https://www.blm.gov/programs/energy-and-minerals/mining-and-minerals/locatable-minerals/mining-claims/recording" },
+    { label: "Electronic Code of Federal Regulations â 43 CFR Part 3833", authority: "U.S. Government Publishing Office", checkedAt: "2026-09-14", url: "https://www.ecfr.gov/current/title-43/subtitle-B/chapter-II/subchapter-C/part-3830/subpart-3833" },
     { label: "Mineral & Land Records System", authority: "U.S. Bureau of Land Management", checkedAt: "2026-09-14", url: "https://mlrs.blm.gov/" }
   ]
 };
@@ -105,9 +105,9 @@ export const oregonWorkflow: StateWorkflow = {
     { id: "or-blm", phase: "federal", title: "Record with BLM", description: "File the required location notice or certificate, map, claimant information, and current fees with BLM within 90 days after physical location, even if Oregon requires earlier recording.", verification: "Confirm BLM receipt, assigned serial number, and the resulting MLRS record; filing does not cure an invalid location." }
   ],
   sources: [
-    { label: "Oregon Revised Statutes — Chapter 517", authority: "Oregon Legislature", checkedAt: "2026-09-21", url: "https://www.oregonlegislature.gov/bills_laws/ors/ors517.html" },
-    { label: "BLM — Recording a Mining Claim or Site", authority: "U.S. Bureau of Land Management", checkedAt: "2026-09-21", url: "https://www.blm.gov/programs/energy-and-minerals/mining-and-minerals/locatable-minerals/mining-claims/recording" },
-    { label: "Electronic Code of Federal Regulations — 43 CFR Part 3832", authority: "U.S. Government Publishing Office", checkedAt: "2026-09-21", url: "https://www.ecfr.gov/current/title-43/subtitle-B/chapter-II/subchapter-C/part-3830/subpart-3832" },
+    { label: "Oregon Revised Statutes â Chapter 517", authority: "Oregon Legislature", checkedAt: "2026-09-21", url: "https://www.oregonlegislature.gov/bills_laws/ors/ors517.html" },
+    { label: "BLM â Recording a Mining Claim or Site", authority: "U.S. Bureau of Land Management", checkedAt: "2026-09-21", url: "https://www.blm.gov/programs/energy-and-minerals/mining-and-minerals/locatable-minerals/mining-claims/recording" },
+    { label: "Electronic Code of Federal Regulations â 43 CFR Part 3832", authority: "U.S. Government Publishing Office", checkedAt: "2026-09-21", url: "https://www.ecfr.gov/current/title-43/subtitle-B/chapter-II/subchapter-C/part-3830/subpart-3832" },
     { label: "Mineral & Land Records System", authority: "U.S. Bureau of Land Management", checkedAt: "2026-09-21", url: "https://mlrs.blm.gov/" }
   ]
 };
@@ -127,9 +127,9 @@ export const utahWorkflow: StateWorkflow = {
     { id: "ut-blm", phase: "federal", title: "Record with BLM", description: "File the required location notice or certificate, map, claimant information, and current fees with BLM within 90 days after physical location, even if Utah requires an earlier county filing.", verification: "Confirm BLM receipt, assigned serial number, and the resulting MLRS record; filing does not cure an invalid location." }
   ],
   sources: [
-    { label: "Utah Code — Title 40, Chapter 1", authority: "Utah Legislature", checkedAt: "2026-09-21", url: "https://le.utah.gov/xcode/Title40/Chapter1/40-1.html" },
-    { label: "BLM — Recording a Mining Claim or Site", authority: "U.S. Bureau of Land Management", checkedAt: "2026-09-21", url: "https://www.blm.gov/programs/energy-and-minerals/mining-and-minerals/locatable-minerals/mining-claims/recording" },
-    { label: "Electronic Code of Federal Regulations — 43 CFR Part 3833", authority: "U.S. Government Publishing Office", checkedAt: "2026-09-21", url: "https://www.ecfr.gov/current/title-43/subtitle-B/chapter-II/subchapter-C/part-3830/subpart-3833" },
+    { label: "Utah Code â Title 40, Chapter 1", authority: "Utah Legislature", checkedAt: "2026-09-21", url: "https://le.utah.gov/xcode/Title40/Chapter1/40-1.html" },
+    { label: "BLM â Recording a Mining Claim or Site", authority: "U.S. Bureau of Land Management", checkedAt: "2026-09-21", url: "https://www.blm.gov/programs/energy-and-minerals/mining-and-minerals/locatable-minerals/mining-claims/recording" },
+    { label: "Electronic Code of Federal Regulations â 43 CFR Part 3833", authority: "U.S. Government Publishing Office", checkedAt: "2026-09-21", url: "https://www.ecfr.gov/current/title-43/subtitle-B/chapter-II/subchapter-C/part-3830/subpart-3833" },
     { label: "Mineral & Land Records System", authority: "U.S. Bureau of Land Management", checkedAt: "2026-09-21", url: "https://mlrs.blm.gov/" }
   ]
 };
@@ -149,9 +149,9 @@ export const coloradoWorkflow: StateWorkflow = {
     { id: "co-blm", phase: "federal", title: "Record with BLM", description: "File the required location notice or certificate, map, claimant information, and current fees with BLM within 90 days after physical location, even if Colorado requires earlier county action.", verification: "Confirm BLM receipt, assigned serial number, and the resulting MLRS record; filing does not cure an invalid location." }
   ],
   sources: [
-    { label: "Colorado Revised Statutes — Title 34", authority: "Colorado General Assembly", checkedAt: "2026-09-21", url: "https://leg.colorado.gov/sites/default/files/images/olls/crs2025-title-34.pdf" },
-    { label: "BLM — Recording a Mining Claim or Site", authority: "U.S. Bureau of Land Management", checkedAt: "2026-09-21", url: "https://www.blm.gov/programs/energy-and-minerals/mining-and-minerals/locatable-minerals/mining-claims/recording" },
-    { label: "Electronic Code of Federal Regulations — 43 CFR Part 3832", authority: "U.S. Government Publishing Office", checkedAt: "2026-09-21", url: "https://www.ecfr.gov/current/title-43/subtitle-B/chapter-II/subchapter-C/part-3830/subpart-3832" },
+    { label: "Colorado Revised Statutes â Title 34", authority: "Colorado General Assembly", checkedAt: "2026-09-21", url: "https://leg.colorado.gov/sites/default/files/images/olls/crs2025-title-34.pdf" },
+    { label: "BLM â Recording a Mining Claim or Site", authority: "U.S. Bureau of Land Management", checkedAt: "2026-09-21", url: "https://www.blm.gov/programs/energy-and-minerals/mining-and-minerals/locatable-minerals/mining-claims/recording" },
+    { label: "Electronic Code of Federal Regulations â 43 CFR Part 3832", authority: "U.S. Government Publishing Office", checkedAt: "2026-09-21", url: "https://www.ecfr.gov/current/title-43/subtitle-B/chapter-II/subchapter-C/part-3830/subpart-3832" },
     { label: "Mineral & Land Records System", authority: "U.S. Bureau of Land Management", checkedAt: "2026-09-21", url: "https://mlrs.blm.gov/" }
   ]
 };
@@ -171,10 +171,32 @@ export const idahoWorkflow: StateWorkflow = {
     { id: "id-blm", phase: "federal", title: "Record with BLM", description: "File the required location notice or certificate, map, claimant information, and current fees with BLM within 90 days after physical location, even if Idaho requires earlier county action.", verification: "Confirm BLM receipt, assigned serial number, and the resulting MLRS record; filing does not cure an invalid location." }
   ],
   sources: [
-    { label: "Idaho Code — Title 47, Chapter 6", authority: "Idaho Legislature", checkedAt: "2026-09-21", url: "https://legislature.idaho.gov/statutesrules/idstat/Title47/T47CH6/" },
+    { label: "Idaho Code â Title 47, Chapter 6", authority: "Idaho Legislature", checkedAt: "2026-09-21", url: "https://legislature.idaho.gov/statutesrules/idstat/Title47/T47CH6/" },
     { label: "Idaho water-resource protection and small-scale mining", authority: "Idaho Department of Water Resources", checkedAt: "2026-09-21", url: "https://idwr.idaho.gov/water-resource-protection-safety/" },
-    { label: "BLM — Recording a Mining Claim or Site", authority: "U.S. Bureau of Land Management", checkedAt: "2026-09-21", url: "https://www.blm.gov/programs/energy-and-minerals/mining-and-minerals/locatable-minerals/mining-claims/recording" },
+    { label: "BLM â Recording a Mining Claim or Site", authority: "U.S. Bureau of Land Management", checkedAt: "2026-09-21", url: "https://www.blm.gov/programs/energy-and-minerals/mining-and-minerals/locatable-minerals/mining-claims/recording" },
     { label: "Mineral & Land Records System", authority: "U.S. Bureau of Land Management", checkedAt: "2026-09-21", url: "https://mlrs.blm.gov/" }
+  ]
+};
+
+export const montanaWorkflow: StateWorkflow = {
+  state: "MT",
+  title: "Montana claim-location research checklist",
+  reviewedAt: "2026-09-26",
+  notice: "This checklist organizes official sources; it does not determine mineral-entry status, validate discovery, authorize access or surface disturbance, or certify compliance. A mapped gap and federal surface management do not establish legal availability.",
+  steps: [
+    { id: "mt-status", phase: "research", title: "Verify land and mineral-entry status", description: "Identify the legal description, surface manager, mineral estate, existing claims, withdrawals, closures, and special-area restrictions using current BLM title and case records. Never infer availability from an empty map area.", verification: "Save source dates and confirm uncertain status with the BLM Montana/Dakotas office and the responsible surface manager." },
+    { id: "mt-access", phase: "research", title: "Check access and surface-use authorization", description: "Determine lawful access and whether BLM, the Forest Service, a private owner, or another manager requires authorization. An unpatented claim does not grant exclusive surface ownership or authorize roads, structures, occupancy, or disturbance.", verification: "Confirm access and proposed-activity requirements with every responsible owner and agency before field work." },
+    { id: "mt-permits", phase: "research", title: "Separate claim location from Montana mining permits", description: "Review Montana DEQ requirements before exploration or mining that may disturb the surface. Exploration licenses, Small Miner Exclusion Statements, operating permits, water authorizations, and reclamation obligations are separate from locating a federal claim.", verification: "Obtain written applicability and authorization determinations from Montana DEQ and the surface manager before disturbance." },
+    { id: "mt-county", phase: "research", title: "Confirm county and claim-type requirements", description: "Identify each Montana county containing the proposed claim and confirm its current recording format, fees, filing methods, and document-indexing requirements for the applicable claim or site.", verification: "Confirm current requirements directly with each applicable county clerk and recorder." },
+    { id: "mt-field", phase: "field", title: "Inspect, mark, and document the physical site", description: "Check lawful access, existing monuments, conflicting occupation, protected resources, and evidence of a valuable locatable mineral. Clearly mark the location under applicable state and federal requirements without unauthorized disturbance.", verification: "Online screening and phone GPS cannot establish discovery, legal boundaries, ownership, or availability." },
+    { id: "mt-record", phase: "county", title: "Record the certificate and map with the county", description: "Prepare and record the certificate or notice of location and map in the county where the claim or site is located within the applicable deadline. Ensure the legal description agrees with the physical location.", verification: "Retain the recorded copy, receipt, document number, and timely-delivery evidence; recorder acceptance does not establish validity." },
+    { id: "mt-blm", phase: "federal", title: "Record with BLM", description: "File a copy of the location notice or certificate, map, claimant information, and current fees with the BLM Montana/Dakotas State Office within 90 days after physical location.", verification: "Confirm BLM receipt, assigned serial number, and the resulting MLRS record; filing and payment do not cure an invalid location." }
+  ],
+  sources: [
+    { label: "Montana/Dakotas Mining Claim Packet", authority: "U.S. Bureau of Land Management", checkedAt: "2026-09-26", url: "https://www.blm.gov/sites/default/files/docs/2024-09/MTDK%20Mining%20Claims%20Packet%202024.09.pdf" },
+    { label: "Montana DEQ â Hard Rock Mining", authority: "Montana Department of Environmental Quality", checkedAt: "2026-09-26", url: "https://deq.mt.gov/mining/Programs/hardrock" },
+    { label: "BLM Montana-Dakotas â Mining and Minerals", authority: "U.S. Bureau of Land Management", checkedAt: "2026-09-26", url: "https://www.blm.gov/programs/energy-and-minerals/mining-and-minerals/about/montana" },
+    { label: "Mineral & Land Records System", authority: "U.S. Bureau of Land Management", checkedAt: "2026-09-26", url: "https://mlrs.blm.gov/" }
   ]
 };
 

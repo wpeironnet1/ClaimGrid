@@ -48,7 +48,7 @@ export default function ClaimIntake() {
           <label>Claim type<select value={claimType} onChange={e => setClaimType(e.target.value as ClaimType)}><option value="placer">Placer</option><option value="lode">Lode</option><option value="mill">Mill site</option><option value="tunnel">Tunnel site</option></select></label>
           <fieldset><legend>Where are you in the process?</legend>
             <label className="choice"><input type="radio" checked={stage === "research"} onChange={() => setStage("research")} /><span><b>Researching only</b><small>No deadline is calculated because no physical location is being claimed.</small></span></label>
-            <label className="choice"><input type="radio" checked={stage === "located"} onChange={() => setStage("located")} /><span><b>I physically marked/located a claim</b><small>Use the actual field location date—not the day you found it online.</small></span></label>
+            <label className="choice"><input type="radio" checked={stage === "located"} onChange={() => setStage("located")} /><span><b>I physically marked/located a claim</b><small>Use the actual field location dateânot the day you found it online.</small></span></label>
           </fieldset>
           {stage === "located" && <label>Physical location date<input type="date" value={locationDate} max={new Date().toISOString().slice(0,10)} onChange={e => setLocationDate(e.target.value)} required /></label>}
           <label className="ack"><input type="checkbox" checked={acknowledged} onChange={e => setAcknowledged(e.target.checked)} required /><span>I understand map data is screening evidence only. I must verify current BLM records, land status and withdrawals, monuments, discovery, and state/county rules.</span></label>
@@ -59,20 +59,21 @@ export default function ClaimIntake() {
         <aside>
           <h2>{saved ? "Draft saved" : "What happens next"}</h2>
           {saved ? <>
-            <div className="statusBadge">{saved.stage === "research" ? "RESEARCH — NO RIGHTS CREATED" : "LOCATION DATE RECORDED"}</div>
+            <div className="statusBadge">{saved.stage === "research" ? "RESEARCH â NO RIGHTS CREATED" : "LOCATION DATE RECORDED"}</div>
             <dl><div><dt>Project</dt><dd>{saved.name}</dd></div><div><dt>Jurisdiction</dt><dd>{saved.county ? `${saved.county} County, ` : ""}{saved.state}</dd></div>{saved.federalRecordingDeadline && <div className="deadline"><dt>Federal 90-day deadline</dt><dd>{saved.federalRecordingDeadline}</dd></div>}</dl>
             {saved.federalRecordingDeadline && <p className="deadlineWarning"><b>Do not treat this as your first deadline.</b> State or county recording can be required sooner. Confirm the applicable rules immediately.</p>}
-            {saved.state === "NV" && <a className="workflowLink" href="/claim/nevada">Open Nevada verification checklist →</a>}
-            {saved.state === "AZ" && <a className="workflowLink" href="/claim/arizona">Open Arizona verification checklist →</a>}
-            {saved.state === "CA" && <a className="workflowLink" href="/claim/california">Open California verification checklist →</a>}
-            {saved.state === "OR" && <a className="workflowLink" href="/claim/oregon">Open Oregon verification checklist →</a>}
-            {saved.state === "UT" && <a className="workflowLink" href="/claim/utah">Open Utah verification checklist →</a>}
-            {saved.state === "CO" && <a className="workflowLink" href="/claim/colorado">Open Colorado verification checklist →</a>}
-            {saved.state === "ID" && <a className="workflowLink" href="/claim/idaho">Open Idaho verification checklist →</a>}
-            {saved.stage === "located" && <a className="workflowLink" href="/documents/blm">Prepare BLM recording worksheet →</a>}
-            {saved.federalRecordingDeadline && <a className="workflowLink" href="/deadlines">Open deadline tracker →</a>}
+            {saved.state === "NV" && <a className="workflowLink" href="/claim/nevada">Open Nevada verification checklist â</a>}
+            {saved.state === "AZ" && <a className="workflowLink" href="/claim/arizona">Open Arizona verification checklist â</a>}
+            {saved.state === "CA" && <a className="workflowLink" href="/claim/california">Open California verification checklist â</a>}
+            {saved.state === "OR" && <a className="workflowLink" href="/claim/oregon">Open Oregon verification checklist â</a>}
+            {saved.state === "UT" && <a className="workflowLink" href="/claim/utah">Open Utah verification checklist â</a>}
+            {saved.state === "CO" && <a className="workflowLink" href="/claim/colorado">Open Colorado verification checklist â</a>}
+            {saved.state === "ID" && <a className="workflowLink" href="/claim/idaho">Open Idaho verification checklist â</a>}
+            {saved.state === "MT" && <a className="workflowLink" href="/claim/montana">Open Montana verification checklist â</a>}
+            {saved.stage === "located" && <a className="workflowLink" href="/documents/blm">Prepare BLM recording worksheet â</a>}
+            {saved.federalRecordingDeadline && <a className="workflowLink" href="/deadlines">Open deadline tracker â</a>}
           </> : <ol><li>Save the jurisdiction and present stage.</li><li>Research official land and mineral records.</li><li>Verify conditions and monuments in the field.</li><li>Follow state, county, and BLM requirements.</li></ol>}
-          <div className="officialBox"><b>Authoritative verification required</b><p>ClaimGrid cannot determine legal availability or validate a discovery. Confirm the current record directly with the responsible agencies.</p><a href="https://www.blm.gov/programs/energy-and-minerals/mining-and-minerals/locatable-minerals/mining-claims" target="_blank" rel="noreferrer">Review BLM mining-claim guidance ↗</a></div>
+          <div className="officialBox"><b>Authoritative verification required</b><p>ClaimGrid cannot determine legal availability or validate a discovery. Confirm the current record directly with the responsible agencies.</p><a href="https://www.blm.gov/programs/energy-and-minerals/mining-and-minerals/locatable-minerals/mining-claims" target="_blank" rel="noreferrer">Review BLM mining-claim guidance â</a></div>
         </aside>
       </div>
     </div>
