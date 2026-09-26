@@ -70,6 +70,7 @@ export default function ClaimIntake() {
             {saved.state === "CO" && <a className="workflowLink" href="/claim/colorado">Open Colorado verification checklist â</a>}
             {saved.state === "ID" && <a className="workflowLink" href="/claim/idaho">Open Idaho verification checklist â</a>}
             {saved.state === "MT" && <a className="workflowLink" href="/claim/montana">Open Montana verification checklist â</a>}
+            {saved.state === "WY" && <a className="workflowLink" href="/claim/wyoming">Open Wyoming verification checklist â</a>}
             {saved.stage === "located" && <a className="workflowLink" href="/documents/blm">Prepare BLM recording worksheet â</a>}
             {saved.federalRecordingDeadline && <a className="workflowLink" href="/deadlines">Open deadline tracker â</a>}
           </> : <ol><li>Save the jurisdiction and present stage.</li><li>Research official land and mineral records.</li><li>Verify conditions and monuments in the field.</li><li>Follow state, county, and BLM requirements.</li></ol>}

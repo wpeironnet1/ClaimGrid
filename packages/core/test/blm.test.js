@@ -24,6 +24,7 @@ const {
   coloradoWorkflow,
   idahoWorkflow,
   montanaWorkflow,
+  wyomingWorkflow,
   nevadaWorkflow,
   oregonWorkflow,
   utahWorkflow,
@@ -996,6 +997,19 @@ test("Montana workflow preserves source dates and official authorities", () => {
   assert.ok(montanaWorkflow.sources.every((source) => source.checkedAt === "2026-09-26"));
   assert.ok(montanaWorkflow.sources.some((source) => source.authority === "Montana Department of Environmental Quality"));
   assert.ok(montanaWorkflow.sources.some((source) => /Montana\/Dakotas Mining Claim Packet/.test(source.label)));
+});
+test("Wyoming workflow separates claim location from state operating permits", () => {
+  assert.equal(wyomingWorkflow.state, "WY");
+  assert.equal(wyomingWorkflow.steps.length, 7);
+  assert.ok(wyomingWorkflow.steps.some((step) => /Wyoming operating permits/i.test(step.title)));
+  assert.ok(wyomingWorkflow.steps.some((step) => /does not include exclusive surface rights/i.test(step.description)));
+  assert.match(wyomingWorkflow.notice, /do not establish legal availability/i);
+});
+test("Wyoming workflow preserves source dates and official authorities", () => {
+  assert.equal(wyomingWorkflow.reviewedAt, "2026-09-26");
+  assert.ok(wyomingWorkflow.sources.every((source) => source.checkedAt === "2026-09-26"));
+  assert.ok(wyomingWorkflow.sources.some((source) => source.authority === "Wyoming Legislature"));
+  assert.ok(wyomingWorkflow.sources.some((source) => source.authority === "Wyoming Department of Environmental Quality"));
 });
 test("rejects unsafe saved research evidence", () => { assert.deepEqual(parseResearchSnapshots(JSON.stringify([{ id:"bad", label:"Invalid", bounds:{west:-120,south:38,east:-110,north:39}, activeClaimCount:-1, sourceCheckedAt:"never", savedAt:"never", screeningOnly:true }])), []); assert.throws(() => createResearchSnapshot({ label:"Oversized", bounds:{west:-120,south:38,east:-110,north:39}, activeClaimCount:0, sourceCheckedAt:"2026-09-20T20:00:00Z" }), /five degrees/i); });
 test("claim bookmark storage rejects invalid bounds and timestamps", () => { const valid=createClaimBookmark({recordKey:"NV-1",areaLabel:"Test",bounds:{west:-120,south:38,east:-119,north:39},details:{caseNumber:"NV-1",claimName:null,disposition:null,commodity:null,quality:null,recordedAcres:null,state:"NV"},sourceCheckedAt:"2026-09-20T20:00:00Z"},new Date("2026-09-20T21:00:00Z")); assert.deepEqual(parseClaimBookmarks(JSON.stringify([{...valid,sourceCheckedAt:"invalid"}])),[]); assert.deepEqual(parseClaimBookmarks(JSON.stringify([{...valid,bounds:{west:-120,south:38,east:-110,north:39}}])),[]); });

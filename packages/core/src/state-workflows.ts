@@ -200,6 +200,28 @@ export const montanaWorkflow: StateWorkflow = {
   ]
 };
 
+export const wyomingWorkflow: StateWorkflow = {
+  state: "WY",
+  title: "Wyoming claim-location research checklist",
+  reviewedAt: "2026-09-26",
+  notice: "This checklist organizes official sources; it does not determine mineral-entry status, validate discovery, authorize access or mining activity, or certify compliance. Public-land appearance and a mapped gap do not establish legal availability.",
+  steps: [
+    { id: "wy-status", phase: "research", title: "Verify land and mineral-entry status", description: "Identify the legal description, surface manager, mineral estate, current claims, withdrawals, closures, and special-area restrictions using current BLM title and case records. Do not treat an empty map area as open ground.", verification: "Save source dates and confirm uncertain status with the BLM Wyoming office and responsible surface manager." },
+    { id: "wy-access", phase: "research", title: "Check access and surface-use authorization", description: "Determine lawful access and whether BLM, the Forest Service, a private owner, or another manager requires authorization. A mining claim does not include exclusive surface rights or authorize roads, structures, occupancy, or disturbance.", verification: "Confirm access and proposed-activity requirements with every responsible owner and agency before field work." },
+    { id: "wy-permits", phase: "research", title: "Separate claim location from Wyoming operating permits", description: "Review Wyoming DEQ Land Quality and Water Quality requirements before mining, excavation, discharge, or other disturbance. State licensing, permits, financial assurance, water coverage, and reclamation remain separate from locating a federal claim.", verification: "Obtain written applicability and authorization determinations from Wyoming DEQ and the surface manager before disturbance." },
+    { id: "wy-county", phase: "research", title: "Confirm county and claim-type rules", description: "Identify each Wyoming county containing the proposed claim and review current Wyoming Statutes Title 30 location-certificate requirements for the applicable claim type, together with recorder formatting, fee, and filing rules.", verification: "Confirm current requirements directly with each applicable county clerk and recorder." },
+    { id: "wy-field", phase: "field", title: "Inspect, stake, and document the site", description: "Check lawful access, existing monuments, conflicting occupation, protected resources, and evidence of a valuable locatable mineral. Follow current Wyoming requirements for the discovery point, notice, boundaries, monuments, and location certificate without unauthorized disturbance.", verification: "Online screening and phone GPS cannot establish discovery, legal boundaries, ownership, or availability." },
+    { id: "wy-record", phase: "county", title: "Record the location certificate with the county", description: "Prepare and record the location certificate and required description or map in the correct county within the applicable Wyoming deadline. Ensure the recorded information agrees with the physical location.", verification: "Retain the recorded copy, receipt, document number, and timely-delivery evidence; recorder acceptance does not establish validity." },
+    { id: "wy-blm", phase: "federal", title: "Record with BLM", description: "File a copy of the location notice or certificate, map, claimant information, and current fees with the BLM Wyoming State Office within 90 days after physical location.", verification: "Confirm BLM receipt, assigned serial number, and the resulting MLRS record; filing and payment do not cure an invalid location." }
+  ],
+  sources: [
+    { label: "Wyoming Statutes â Title 30, Mines and Minerals", authority: "Wyoming Legislature", checkedAt: "2026-09-26", url: "https://wyoleg.gov/statutes/compress/title30.pdf" },
+    { label: "Wyoming DEQ â Land Quality Division", authority: "Wyoming Department of Environmental Quality", checkedAt: "2026-09-26", url: "https://deq.wyoming.gov/land-quality/" },
+    { label: "BLM â Recording a Mining Claim or Site", authority: "U.S. Bureau of Land Management", checkedAt: "2026-09-26", url: "https://www.blm.gov/programs/energy-and-minerals/mining-and-minerals/locatable-minerals/mining-claims/recording" },
+    { label: "Mineral & Land Records System", authority: "U.S. Bureau of Land Management", checkedAt: "2026-09-26", url: "https://mlrs.blm.gov/" }
+  ]
+};
+
 export function parseWorkflowProgress(raw: string | null, allowedIds: readonly string[]): string[] {
   if (!raw) return [];
   try {
