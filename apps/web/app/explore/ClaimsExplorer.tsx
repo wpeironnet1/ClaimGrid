@@ -254,6 +254,7 @@ export default function ClaimsExplorer() {
         north: area.north,
       },
       activeClaimCount: result.features.length,
+      resultCompleteness: result.metadata.exceededLimit ? "truncated" : "complete",
       sourceCheckedAt: result.metadata.retrievedAt,
     });
     const next = upsertResearchSnapshot(saved, snapshot);
@@ -273,7 +274,7 @@ export default function ClaimsExplorer() {
   }
   function ageLabel(sourceCheckedAt: string) {
     const age=describeEvidenceAge(sourceCheckedAt);
-    return age==="same-day"?"Checked within 24 hours":age==="recheck"?"Recheck before relying on it":age==="stale"?"Stale — rerun required":"Timestamp needs verification";
+    return age==="same-day"?"Checked within 24 hours":age==="recheck"?"Recheck before relying on it":age==="stale"?"Stale â rerun required":"Timestamp needs verification";
   }
 
   const freshness = sourceHealth
@@ -293,7 +294,7 @@ export default function ClaimsExplorer() {
           <span className="stepLabel">OFFICIAL SOURCE STATUS</span>
           <b>
             {!sourceHealth
-              ? "Checking BLM service…"
+              ? "Checking BLM serviceâ¦"
               : sourceHealth.status === "operational"
                 ? "BLM layer schema operational"
                 : sourceHealth.status === "degraded"
@@ -368,7 +369,7 @@ export default function ClaimsExplorer() {
               <g className="claimShapes">{paths}</g>
             </svg>
             {loading && (
-              <div className="mapStatus">Loading the current BLM layer…</div>
+              <div className="mapStatus">Loading the current BLM layerâ¦</div>
             )}
             {error && <div className="mapStatus error">{error}</div>}
             <div className="legend">
@@ -376,14 +377,14 @@ export default function ClaimsExplorer() {
                 <i />
                 Active claim geometry
               </span>
-              <span>BLM MLRS • not an availability map</span>
+              <span>BLM MLRS â¢ not an availability map</span>
             </div>
           </div>
           <form className="customBounds" onSubmit={applyCustomArea}>
             <div>
               <b>Research anywhere in the United States</b>
               <span>
-                Enter a bounded screening viewport no larger than 5° × 5°.
+                Enter a bounded screening viewport no larger than 5Â° Ã 5Â°.
               </span>
             </div>
             <label>
@@ -419,7 +420,7 @@ export default function ClaimsExplorer() {
         </section>
         <aside className="resultPanel">
           <span className="stepLabel">LIVE RESULTS</span>
-          <h1>{loading ? "—" : (result?.features.length ?? 0)}</h1>
+          <h1>{loading ? "â" : `${result?.features.length ?? 0}${result?.metadata.exceededLimit ? "+" : ""}`}</h1>
           <h2>mapped active-claim records intersect this view</h2>
           <p>
             This count reflects geometries returned by the current BLM service,
@@ -438,7 +439,7 @@ export default function ClaimsExplorer() {
                   <dt>Result cap</dt>
                   <dd>
                     {result.metadata.exceededLimit
-                      ? "Reached — zoom in"
+                      ? "Reached â zoom in"
                       : "Not reached"}
                   </dd>
                 </div>
@@ -455,7 +456,7 @@ export default function ClaimsExplorer() {
                       onClick={() => setSelectedFeatureIndex(null)}
                       aria-label="Close selected claim details"
                     >
-                      ×
+                      Ã
                     </button>
                   </div>
                   <h3>{selectedClaim.claimName ?? "Unnamed record"}</h3>
@@ -509,7 +510,7 @@ export default function ClaimsExplorer() {
             target="_blank"
             rel="noreferrer"
           >
-            Verify in BLM MLRS ↗
+            Verify in BLM MLRS â
           </a>
         </aside>
       </div>
@@ -531,9 +532,10 @@ export default function ClaimsExplorer() {
                 <div>
                   <b>{item.label}</b>
                   <span>
-                    {item.activeClaimCount} mapped records • checked{" "}
+                    {item.resultCompleteness === "truncated" ? "At least " : ""}{item.activeClaimCount} mapped records â¢ checked{" "}
                     {new Date(item.sourceCheckedAt).toLocaleString()}
                   </span>
+                  {item.resultCompleteness === "truncated" && <small>Result cap reached â reload a smaller area for a complete count.</small>}
                   <small className={`evidenceAge ${describeEvidenceAge(item.sourceCheckedAt)}`}>{ageLabel(item.sourceCheckedAt)}</small>
                 </div>
                 <div className="savedActions"><button onClick={()=>reopenSaved(item)} aria-label={`Reload ${item.label} and request current BLM data`}>Reload live data</button><button onClick={() => removeSaved(item.id)} aria-label={`Remove ${item.label}`}>Remove</button></div>
@@ -565,8 +567,8 @@ export default function ClaimsExplorer() {
                       "Unnamed BLM record"}
                   </b>
                   <span>
-                    {item.details.caseNumber ?? "No case number"} ·{" "}
-                    {item.areaLabel} · checked{" "}
+                    {item.details.caseNumber ?? "No case number"} Â·{" "}
+                    {item.areaLabel} Â· checked{" "}
                     {new Date(item.sourceCheckedAt).toLocaleString()}
                   </span>
                   <small className={`evidenceAge ${describeEvidenceAge(item.sourceCheckedAt)}`}>{ageLabel(item.sourceCheckedAt)}</small>

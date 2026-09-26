@@ -105,7 +105,25 @@ test("creates an explicitly screening-only research snapshot", () => {
     new Date("2026-09-13T18:00:00.000Z"),
   );
   assert.equal(snapshot.screeningOnly, true);
+  assert.equal(snapshot.resultCompleteness, "unknown");
   assert.equal(snapshot.savedAt, "2026-09-13T18:00:00.000Z");
+});
+test("preserves capped-result provenance in saved research", () => {
+  const snapshot = createResearchSnapshot({
+    label: "Dense claim area",
+    bounds: { west: -120, south: 38, east: -119, north: 39 },
+    activeClaimCount: 1000,
+    resultCompleteness: "truncated",
+    sourceCheckedAt: "2026-09-26T20:00:00.000Z",
+  });
+  assert.equal(snapshot.resultCompleteness, "truncated");
+  assert.equal(parseResearchSnapshots(JSON.stringify([snapshot]))[0].resultCompleteness, "truncated");
+});
+test("marks legacy saved research completeness unknown and rejects altered values", () => {
+  const legacy = createResearchSnapshot({ label: "Legacy", bounds: { west: -120, south: 38, east: -119, north: 39 }, activeClaimCount: 3, sourceCheckedAt: "2026-09-26T20:00:00.000Z" });
+  const { resultCompleteness: ignored, ...withoutCompleteness } = legacy;
+  assert.equal(parseResearchSnapshots(JSON.stringify([withoutCompleteness]))[0].resultCompleteness, "unknown");
+  assert.deepEqual(parseResearchSnapshots(JSON.stringify([{ ...legacy, resultCompleteness: "complete-enough" }])), []);
 });
 test("ignores malformed persisted research data", () =>
   assert.deepEqual(parseResearchSnapshots("not json"), []));

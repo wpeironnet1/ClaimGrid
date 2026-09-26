@@ -1,25 +1,31 @@
 import { summarizeClaimProperties, validateResearchBounds, type Bounds, type ClaimRecordSummary } from "./blm";
 
 export const RESEARCH_STORAGE_VERSION = 1;
+export type ResearchResultCompleteness = "complete" | "truncated" | "unknown";
 export type SavedResearchArea = {
   id: string;
   label: string;
   bounds: Bounds;
   activeClaimCount: number;
+  resultCompleteness: ResearchResultCompleteness;
   sourceCheckedAt: string;
   savedAt: string;
   screeningOnly: true;
 };
 
-export function createResearchSnapshot(input: Omit<SavedResearchArea, "id" | "savedAt" | "screeningOnly">, now = new Date()): SavedResearchArea {
+type ResearchSnapshotInput = Omit<SavedResearchArea, "id" | "savedAt" | "screeningOnly" | "resultCompleteness"> & { resultCompleteness?: ResearchResultCompleteness };
+
+export function createResearchSnapshot(input: ResearchSnapshotInput, now = new Date()): SavedResearchArea {
   const bounds = validateResearchBounds(input.bounds);
   if (!bounds.ok) throw new Error(bounds.error);
   const label = input.label.trim().slice(0, 80);
   if (!label) throw new Error("Name the research area before saving it.");
   if (!Number.isInteger(input.activeClaimCount) || input.activeClaimCount < 0 || input.activeClaimCount > 1000) throw new Error("The mapped claim count is outside the supported result range.");
+  const resultCompleteness = input.resultCompleteness ?? "unknown";
+  if (!["complete", "truncated", "unknown"].includes(resultCompleteness)) throw new Error("The research result completeness is invalid.");
   if (Number.isNaN(Date.parse(input.sourceCheckedAt)) || Number.isNaN(now.getTime())) throw new Error("The research source timestamp is invalid.");
   const coordinateKey = [input.bounds.west, input.bounds.south, input.bounds.east, input.bounds.north].join(":");
-  return { ...input, label, bounds: bounds.bounds, id: `${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${coordinateKey}`, savedAt: now.toISOString(), screeningOnly: true };
+  return { ...input, resultCompleteness, label, bounds: bounds.bounds, id: `${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${coordinateKey}`, savedAt: now.toISOString(), screeningOnly: true };
 }
 
 export function parseResearchSnapshots(value: string | null): SavedResearchArea[] {
@@ -30,7 +36,7 @@ export function parseResearchSnapshots(value: string | null): SavedResearchArea[
     return parsed.flatMap(item => {
       try {
         if (!item || typeof item.id !== "string" || item.id.length > 500 || item.screeningOnly !== true || typeof item.savedAt !== "string" || Number.isNaN(Date.parse(item.savedAt))) return [];
-        return [{ ...createResearchSnapshot({ label: item.label, bounds: item.bounds, activeClaimCount: item.activeClaimCount, sourceCheckedAt: item.sourceCheckedAt }, new Date(item.savedAt)), id: item.id }];
+        return [{ ...createResearchSnapshot({ label: item.label, bounds: item.bounds, activeClaimCount: item.activeClaimCount, sourceCheckedAt: item.sourceCheckedAt, resultCompleteness: item.resultCompleteness ?? "unknown" }, new Date(item.savedAt)), id: item.id }];
       } catch { return []; }
     }).slice(0, 25);
   } catch { return []; }
