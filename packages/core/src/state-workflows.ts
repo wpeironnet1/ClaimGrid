@@ -222,6 +222,28 @@ export const wyomingWorkflow: StateWorkflow = {
   ]
 };
 
+export const newMexicoWorkflow: StateWorkflow = {
+  state: "NM",
+  title: "New Mexico claim-location research checklist",
+  reviewedAt: "2026-09-26",
+  notice: "This checklist organizes official sources; it does not determine mineral-entry status, validate discovery, authorize access, exploration, mining, or surface disturbance, or certify compliance. Public-land appearance and a mapped gap do not establish legal availability.",
+  steps: [
+    { id: "nm-status", phase: "research", title: "Verify land and mineral-entry status", description: "Identify the legal description, surface manager, mineral estate, current claims, withdrawals, closures, and special-area restrictions using current BLM title and case records. Distinguish federal mineral estate from New Mexico State Trust Land, tribal land, private land, and split estate; never treat an empty map area as open ground.", verification: "Save source dates and confirm uncertain status with the BLM New Mexico office and every responsible land or mineral owner." },
+    { id: "nm-access", phase: "research", title: "Check lawful access and surface-use authority", description: "Determine lawful access and whether BLM, the Forest Service, a tribe, a private owner, or another manager requires authorization. An unpatented claim does not include exclusive surface rights or authorize roads, structures, occupancy, excavation, or disturbance.", verification: "Confirm access and proposed-activity requirements with every responsible owner and agency before field work." },
+    { id: "nm-permits", phase: "research", title: "Separate claim location from New Mexico permits", description: "Review New Mexico EMNRD Mining Act Reclamation Program requirements before exploration or mining that may disturb the surface. General, minimal-impact, or regular exploration and mining permits, registration, reclamation, financial assurance, water authorization, and other approvals remain separate from locating a federal claim.", verification: "Obtain written applicability and authorization determinations from EMNRD and the surface manager before disturbance." },
+    { id: "nm-county", phase: "research", title: "Confirm county and claim-type requirements", description: "Identify each New Mexico county containing the proposed claim and confirm its current recording format, fees, filing methods, indexing rules, and required location or map content for the applicable claim or site.", verification: "Confirm current requirements directly with each applicable county clerk and retain the response date." },
+    { id: "nm-field", phase: "field", title: "Inspect, mark, and document the site", description: "Check lawful access, existing monuments, conflicting occupation, protected resources, and evidence of a valuable locatable mineral. Mark the location under current state and federal requirements without unauthorized disturbance.", verification: "Online screening and phone GPS cannot establish discovery, legal boundaries, ownership, or availability." },
+    { id: "nm-record", phase: "county", title: "Record the location document with the county", description: "Prepare and record the location notice or certificate and required map or description in the correct county within the applicable deadline. Ensure the recorded information agrees with the physical location.", verification: "Retain the recorded copy, receipt, document number, and timely-delivery evidence; recorder acceptance does not establish validity." },
+    { id: "nm-blm", phase: "federal", title: "Record with BLM", description: "File a copy of the location notice or certificate, map, claimant information, and current fees with the proper BLM State Office within 90 days after physical location.", verification: "Confirm BLM receipt, assigned serial number, and the resulting MLRS record; filing and payment do not cure an invalid location." }
+  ],
+  sources: [
+    { label: "BLM New Mexico â Mining and Minerals", authority: "U.S. Bureau of Land Management", checkedAt: "2026-09-26", url: "https://www.blm.gov/programs/energy-and-minerals/mining-and-minerals/about/new-mexico" },
+    { label: "Mining Act Reclamation Program", authority: "New Mexico Energy, Minerals and Natural Resources Department", checkedAt: "2026-09-26", url: "https://www.emnrd.nm.gov/mmd/mining-act-reclamation-program/" },
+    { label: "Mining Act Application Forms", authority: "New Mexico Energy, Minerals and Natural Resources Department", checkedAt: "2026-09-26", url: "https://www.emnrd.nm.gov/mmd/mining-act-reclamation-program/application-forms/" },
+    { label: "Mineral & Land Records System", authority: "U.S. Bureau of Land Management", checkedAt: "2026-09-26", url: "https://mlrs.blm.gov/" }
+  ]
+};
+
 export function parseWorkflowProgress(raw: string | null, allowedIds: readonly string[]): string[] {
   if (!raw) return [];
   try {
