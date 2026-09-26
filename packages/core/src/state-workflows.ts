@@ -244,6 +244,30 @@ export const newMexicoWorkflow: StateWorkflow = {
   ]
 };
 
+export const alaskaWorkflow: StateWorkflow = {
+  state: "AK",
+  title: "Alaska mineral-location research checklist",
+  reviewedAt: "2026-09-26",
+  notice: "This checklist organizes official sources; it does not determine whether land or minerals are open, resolve state or federal title, validate discovery, authorize access or disturbance, or certify a location. A mapped gap, state selection, or public-land appearance does not establish legal availability.",
+  steps: [
+    { id: "ak-jurisdiction", phase: "research", title: "Determine the land and mineral jurisdiction", description: "Establish whether the proposed location is on conveyed Alaska state land, state-selected land, federal land, Alaska Native land, private land, or another estate. State and federal mineral locations are different systems; do not mix their forms, deadlines, or records.", verification: "Confirm present title, mineral ownership, selection status, withdrawals, closures, and applicable location system with Alaska DNR, BLM, and any other responsible owner." },
+    { id: "ak-status", phase: "research", title: "Verify the area is open to the applicable mineral entry", description: "Review current Alaska Mapper, DNR land records, BLM title and case records, existing locations, withdrawals, mineral orders, special designations, and conflicts. State-selected land can remain under federal administration and carries additional title and access risk.", verification: "Save source dates and obtain agency confirmation for ambiguous, selected, split-estate, or overlapping ground." },
+    { id: "ak-access", phase: "research", title: "Check access and activity authorization", description: "Determine lawful access and the approvals required for sampling, mechanized equipment, camps, roads, water use, exploration, or mining. A mineral location does not convey general surface title or authorize every proposed activity.", verification: "Obtain written access and activity determinations from each land manager before entry or disturbance." },
+    { id: "ak-design", phase: "research", title: "Choose the correct location type and geometry", description: "For Alaska state land, confirm whether a traditional claim, MTRSC location, leasehold location, or prospecting site applies and use the corresponding current form and acreage rules. For federal land, follow the applicable federal claim or site requirements.", verification: "Have the responsible recording or land office confirm the location type, dimensions, legal description, and required form before staking." },
+    { id: "ak-field", phase: "field", title: "Inspect, discover, stake, and document the site", description: "Check lawful access, existing monuments and occupation, protected resources, and evidence of a valuable locatable mineral. Place required posts, monuments, notices, and markings for the selected system without unauthorized disturbance.", verification: "Online screening and phone GPS cannot establish discovery, legal boundaries, ownership, or availability." },
+    { id: "ak-state-record", phase: "county", title: "Record an Alaska state location correctly", description: "If locating on Alaska state land, record the correct notice or certificate and required description in the applicable Alaska recording district, then satisfy current DNR filing, rental, and payment requirements. State recording is not a substitute for federal filing when federal law applies.", verification: "Confirm the deadline and office before leaving the field; retain stamped copies, receipts, and DNR case identifiers. Acceptance does not establish validity." },
+    { id: "ak-federal-record", phase: "federal", title: "Record a federal location with BLM", description: "If locating under federal law, record as required by Alaska law and file the recorded notice, map, claimant information, and current fees with the proper BLM office within 90 days after location. Alaska permits filing with the BLM district office in Fairbanks.", verification: "Confirm BLM receipt, assigned serial number, and the resulting MLRS record; filing and payment do not cure an invalid location." },
+    { id: "ak-maintenance", phase: "federal", title: "Calendar the correct annual obligations", description: "State rental and annual-labor filings differ from federal maintenance-fee and waiver obligations. A late or incorrect Alaska state rental or labor filing can cause automatic abandonment by operation of law.", verification: "Record agency-confirmed due dates, amounts, eligible work, filing offices, and receipts separately for every state or federal location." }
+  ],
+  sources: [
+    { label: "Alaska DNR â Mineral Property Management", authority: "Alaska Department of Natural Resources", checkedAt: "2026-09-26", url: "https://dnr.alaska.gov/mlw/mining/mpm/" },
+    { label: "Staking Requirements for Mineral Locations on State Land", authority: "Alaska Department of Natural Resources", checkedAt: "2026-09-26", url: "https://dnr.alaska.gov/mlw/cdn/pdf/factsheets/staking-requirements-for-mineral-locations-on-state-land.pdf" },
+    { label: "Mining on State-selected Land in Alaska", authority: "Alaska Department of Natural Resources", checkedAt: "2026-09-26", url: "https://dnr.alaska.gov/mlw/cdn/pdf/factsheets/mining-on-state-selected-land.pdf" },
+    { label: "BLM Alaska â Mining and Minerals", authority: "U.S. Bureau of Land Management", checkedAt: "2026-09-26", url: "https://www.blm.gov/programs/energy-and-minerals/mining-and-minerals/about/alaska" },
+    { label: "BLM â Recording a Mining Claim or Site", authority: "U.S. Bureau of Land Management", checkedAt: "2026-09-26", url: "https://www.blm.gov/programs/energy-and-minerals/mining-and-minerals/locatable-minerals/mining-claims/recording" }
+  ]
+};
+
 export function parseWorkflowProgress(raw: string | null, allowedIds: readonly string[]): string[] {
   if (!raw) return [];
   try {

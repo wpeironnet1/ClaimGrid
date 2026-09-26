@@ -1,4 +1,5 @@
 import {
+  alaskaWorkflow,
   arizonaWorkflow,
   californiaWorkflow,
   coloradoWorkflow,
@@ -82,6 +83,13 @@ const stateGuides = [
     href: "/claim/new-mexico",
     note: "Land-status, access, reclamation-permit, and recording checks",
     tone: "gold",
+  },
+  {
+    workflow: alaskaWorkflow,
+    name: "Alaska",
+    href: "/claim/alaska",
+    note: "State-versus-federal title, staking, recording, and maintenance checks",
+    tone: "rust",
   },
 ];
 

@@ -19,6 +19,7 @@ const {
 } = require("../dist/research.js");
 const { createClaimDraft, parseClaimDraft } = require("../dist/claim-draft.js");
 const {
+  alaskaWorkflow,
   arizonaWorkflow,
   californiaWorkflow,
   coloradoWorkflow,
@@ -1024,6 +1025,21 @@ test("New Mexico workflow preserves source dates and official authorities", () =
   assert.ok(newMexicoWorkflow.sources.every((source) => source.checkedAt === "2026-09-26"));
   assert.ok(newMexicoWorkflow.sources.some((source) => source.authority === "New Mexico Energy, Minerals and Natural Resources Department"));
   assert.ok(newMexicoWorkflow.sources.some((source) => source.authority === "U.S. Bureau of Land Management"));
+});
+test("Alaska workflow separates state and federal mineral-location systems", () => {
+  assert.equal(alaskaWorkflow.state, "AK");
+  assert.equal(alaskaWorkflow.steps.length, 8);
+  assert.ok(alaskaWorkflow.steps.some((step) => /land and mineral jurisdiction/i.test(step.title)));
+  assert.ok(alaskaWorkflow.steps.some((step) => /Record an Alaska state location/i.test(step.title)));
+  assert.ok(alaskaWorkflow.steps.some((step) => /Record a federal location with BLM/i.test(step.title)));
+  assert.match(alaskaWorkflow.notice, /does not establish legal availability/i);
+});
+test("Alaska workflow preserves selected-land and annual-maintenance safeguards", () => {
+  assert.equal(alaskaWorkflow.reviewedAt, "2026-09-26");
+  assert.ok(alaskaWorkflow.sources.every((source) => source.checkedAt === "2026-09-26"));
+  assert.ok(alaskaWorkflow.sources.some((source) => /State-selected Land/.test(source.label)));
+  assert.ok(alaskaWorkflow.steps.some((step) => /automatic abandonment/i.test(step.description)));
+  assert.ok(alaskaWorkflow.sources.some((source) => source.authority === "Alaska Department of Natural Resources"));
 });
 test("rejects unsafe saved research evidence", () => { assert.deepEqual(parseResearchSnapshots(JSON.stringify([{ id:"bad", label:"Invalid", bounds:{west:-120,south:38,east:-110,north:39}, activeClaimCount:-1, sourceCheckedAt:"never", savedAt:"never", screeningOnly:true }])), []); assert.throws(() => createResearchSnapshot({ label:"Oversized", bounds:{west:-120,south:38,east:-110,north:39}, activeClaimCount:0, sourceCheckedAt:"2026-09-20T20:00:00Z" }), /five degrees/i); });
 test("claim bookmark storage rejects invalid bounds and timestamps", () => { const valid=createClaimBookmark({recordKey:"NV-1",areaLabel:"Test",bounds:{west:-120,south:38,east:-119,north:39},details:{caseNumber:"NV-1",claimName:null,disposition:null,commodity:null,quality:null,recordedAcres:null,state:"NV"},sourceCheckedAt:"2026-09-20T20:00:00Z"},new Date("2026-09-20T21:00:00Z")); assert.deepEqual(parseClaimBookmarks(JSON.stringify([{...valid,sourceCheckedAt:"invalid"}])),[]); assert.deepEqual(parseClaimBookmarks(JSON.stringify([{...valid,bounds:{west:-120,south:38,east:-110,north:39}}])),[]); });
