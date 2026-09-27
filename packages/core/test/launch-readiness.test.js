@@ -13,6 +13,8 @@ const configured = {
   CLAIMGRID_ENTITLEMENT_STORE_TOKEN: "abcdefghijklmnopqrstuvwxyz123456",
   CLAIMGRID_ACCOUNT_SESSION_URL: "https://accounts.claimgrid.example/session",
   CLAIMGRID_ACCOUNT_SESSION_TOKEN: "zyxwvutsrqponmlkjihgfedcba654321",
+  CLAIMGRID_BILLING_PROFILE_URL: "https://accounts.claimgrid.example/billing-profile",
+  CLAIMGRID_BILLING_PROFILE_TOKEN: "billingprofiletokenabcdefghijklmn12",
   CLAIMGRID_ACCOUNT_DELETE_URL: "https://accounts.claimgrid.example/delete",
   CLAIMGRID_ACCOUNT_DELETE_TOKEN: "deleteaccounttokenabcdefghijklmn1234",
   VERCEL_GIT_COMMIT_SHA: "abcdef1234567890"
@@ -25,7 +27,7 @@ test("reports external launch actions without exposing secret values", () => {
   assert.equal(assessment.checks.find(check => check.id === "accounts").status, "ready");
   assert.equal(assessment.checks.find(check => check.id === "account-deletion").status, "ready");
   const serialized = JSON.stringify(assessment);
-  for (const secret of [configured.STRIPE_SECRET_KEY, configured.STRIPE_WEBHOOK_SECRET, configured.CLAIMGRID_ENTITLEMENT_STORE_TOKEN, configured.CLAIMGRID_ACCOUNT_SESSION_TOKEN, configured.CLAIMGRID_ACCOUNT_DELETE_TOKEN]) assert.equal(serialized.includes(secret), false);
+  for (const secret of [configured.STRIPE_SECRET_KEY, configured.STRIPE_WEBHOOK_SECRET, configured.CLAIMGRID_ENTITLEMENT_STORE_TOKEN, configured.CLAIMGRID_ACCOUNT_SESSION_TOKEN, configured.CLAIMGRID_BILLING_PROFILE_TOKEN, configured.CLAIMGRID_ACCOUNT_DELETE_TOKEN]) assert.equal(serialized.includes(secret), false);
 });
 
 test("billing and accounts remain closed when session introspection is missing", () => {

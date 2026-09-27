@@ -48,6 +48,19 @@ export function parseVerifiedAccountSession(value: unknown): VerifiedAccountSess
   return { accountId: session.accountId, email: session.email };
 }
 
+export interface StripeBillingProfile {
+  accountId: string;
+  customerId: string;
+}
+
+export function parseStripeBillingProfile(value: unknown, expectedAccountId: string): StripeBillingProfile | null {
+  if (!value || typeof value !== "object") return null;
+  const profile = value as { accountId?: unknown; customerId?: unknown };
+  if (profile.accountId !== expectedAccountId || !/^[A-Za-z0-9_-]{8,128}$/.test(expectedAccountId)) return null;
+  if (typeof profile.customerId !== "string" || !/^cus_[A-Za-z0-9]{1,240}$/.test(profile.customerId)) return null;
+  return { accountId: expectedAccountId, customerId: profile.customerId };
+}
+
 export function billingConfiguration(environment: Record<string, string | undefined>) {
   const secretConfigured = stripeSecretMode(environment.STRIPE_SECRET_KEY) !== null;
   const monthlyConfigured = isStripePriceId(environment.STRIPE_PRO_MONTHLY_PRICE_ID);
@@ -57,7 +70,9 @@ export function billingConfiguration(environment: Record<string, string | undefi
   const fulfillmentConfigured = isHttpsServiceEndpoint(fulfillmentUrl) && typeof environment.CLAIMGRID_ENTITLEMENT_STORE_TOKEN === "string" && environment.CLAIMGRID_ENTITLEMENT_STORE_TOKEN.length >= 32;
   const accountSessionUrl = environment.CLAIMGRID_ACCOUNT_SESSION_URL;
   const accountConfigured = isHttpsServiceEndpoint(accountSessionUrl) && typeof environment.CLAIMGRID_ACCOUNT_SESSION_TOKEN === "string" && environment.CLAIMGRID_ACCOUNT_SESSION_TOKEN.length >= 32;
-  return { ready: secretConfigured && monthlyConfigured && annualConfigured && webhookConfigured && fulfillmentConfigured && accountConfigured, secretConfigured, monthlyConfigured, annualConfigured, webhookConfigured, fulfillmentConfigured, accountConfigured };
+  const billingProfileUrl = environment.CLAIMGRID_BILLING_PROFILE_URL;
+  const portalConfigured = isHttpsServiceEndpoint(billingProfileUrl) && typeof environment.CLAIMGRID_BILLING_PROFILE_TOKEN === "string" && environment.CLAIMGRID_BILLING_PROFILE_TOKEN.length >= 32;
+  return { ready: secretConfigured && monthlyConfigured && annualConfigured && webhookConfigured && fulfillmentConfigured && accountConfigured && portalConfigured, secretConfigured, monthlyConfigured, annualConfigured, webhookConfigured, fulfillmentConfigured, accountConfigured, portalConfigured };
 }
 
 export function parseStripeSignatureHeader(header: string | null) {

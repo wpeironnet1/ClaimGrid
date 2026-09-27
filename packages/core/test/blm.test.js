@@ -84,6 +84,7 @@ const {
   parseBillingPlan,
   parseStripeWebhookEnvelope,
   parseStripeSignatureHeader,
+  parseStripeBillingProfile,
   parseVerifiedAccountSession,
 } = require("../dist/billing.js");
 const {
@@ -1031,6 +1032,9 @@ test("billing remains disabled until every server secret and price is valid", ()
       CLAIMGRID_ACCOUNT_SESSION_URL:
         "https://accounts.claimgrid.example/session",
       CLAIMGRID_ACCOUNT_SESSION_TOKEN: "y".repeat(32),
+      CLAIMGRID_BILLING_PROFILE_URL:
+        "https://accounts.claimgrid.example/billing-profile",
+      CLAIMGRID_BILLING_PROFILE_TOKEN: "z".repeat(32),
     }).ready,
     true,
   );
@@ -1055,6 +1059,12 @@ test("checkout account identity fails closed unless the server session is verifi
   assert.equal(parseVerifiedAccountSession({ active: false, accountId: "account_12345", email: "miner@example.com" }), null);
   assert.equal(parseVerifiedAccountSession({ active: true, accountId: "../unsafe", email: "miner@example.com" }), null);
   assert.equal(parseVerifiedAccountSession({ active: true, accountId: "account_12345", email: "invalid" }), null);
+});
+
+test("billing portal customer identity must match the verified account", () => {
+  assert.deepEqual(parseStripeBillingProfile({ accountId: "account_12345", customerId: "cus_valid123" }, "account_12345"), { accountId: "account_12345", customerId: "cus_valid123" });
+  assert.equal(parseStripeBillingProfile({ accountId: "account_other", customerId: "cus_valid123" }, "account_12345"), null);
+  assert.equal(parseStripeBillingProfile({ accountId: "account_12345", customerId: "customer_unsafe" }, "account_12345"), null);
 });
 
 test("parses Stripe signatures without accepting malformed digests", () => {
