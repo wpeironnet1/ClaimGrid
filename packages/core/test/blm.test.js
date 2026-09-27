@@ -2,6 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const {
   assessBlmLayerMetadata,
+  assessArcGisLayerMetadata,
   buildActiveClaimsQuery,
   buildSurfaceManagementQuery,
   buildWithdrawalsQuery,
@@ -752,6 +753,14 @@ test("accepts compatible BLM layer metadata", () => {
   });
   assert.equal(result.compatible, true);
   assert.equal(result.layerName, "Active Mining Claims");
+});
+test("validates surface-management and withdrawal layer contracts independently", () => {
+  const base = { currentVersion: 11.5, type: "Feature Layer", geometryType: "esriGeometryPolygon", capabilities: "Map,Query,Data" };
+  const surface = assessArcGisLayerMetadata({ ...base, name: "Surface Management Agency", fields: ["ADMIN_AGENCY_CODE", "ADMIN_UNIT_NAME", "ADMIN_UNIT_TYPE", "ADMIN_ST"].map(name => ({ name })) }, { layerName: "Surface Management Agency", geometryType: "esriGeometryPolygon", requiredFields: ["ADMIN_AGENCY_CODE", "ADMIN_UNIT_NAME", "ADMIN_UNIT_TYPE", "ADMIN_ST"] });
+  assert.equal(surface.compatible, true);
+  const withdrawal = assessArcGisLayerMetadata({ ...base, name: "Pending", fields: ["CSE_NR", "CSE_NAME", "CSE_DISP", "SEG_MIN", "SEG_SUR", "QLTY"].map(name => ({ name })) }, { layerName: "Pending", geometryType: "esriGeometryPolygon", requiredFields: ["CSE_NR", "CSE_NAME", "CSE_DISP", "SEG_MIN", "SEG_SUR", "QLTY", "GEO_STATE"] });
+  assert.equal(withdrawal.compatible, false);
+  assert.match(withdrawal.issues.join(" "), /GEO_STATE/);
 });
 test("detects a breaking BLM layer schema change", () => {
   const value = {
