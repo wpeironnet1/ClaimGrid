@@ -296,8 +296,12 @@ export default function ClaimsExplorer() {
         north: area.north,
       },
       activeClaimCount: result.features.length,
+      surfaceManagementCount: surfaceManagement?.records.length ?? null,
+      withdrawalCaseCount: withdrawals?.records.length ?? null,
       resultCompleteness: result.metadata.exceededLimit ? "truncated" : "complete",
       sourceCheckedAt: result.metadata.retrievedAt,
+      surfaceManagementCheckedAt: surfaceManagement?.metadata.retrievedAt ?? null,
+      withdrawalsCheckedAt: withdrawals?.metadata.retrievedAt ?? null,
     });
     const next = upsertResearchSnapshot(saved, snapshot);
     setSaved(next);
@@ -573,8 +577,7 @@ export default function ClaimsExplorer() {
           <span className="stepLabel">SAVED RESEARCH</span>
           <h2>Evidence snapshots</h2>
           <p>
-            Each save preserves the area, BLM record count, and the exact time
-            the official source was checked.
+            Each save preserves separate claim, surface-management, and withdrawal counts with the exact time each official source was checked.
           </p>
         </div>
         <div className="savedList">
@@ -589,6 +592,8 @@ export default function ClaimsExplorer() {
                     {item.resultCompleteness === "truncated" ? "At least " : ""}{item.activeClaimCount} mapped records • checked{" "}
                     {new Date(item.sourceCheckedAt).toLocaleString()}
                   </span>
+                  <span>Surface management: {item.surfaceManagementCount === null ? "not captured" : `${item.surfaceManagementCount} records • checked ${new Date(item.surfaceManagementCheckedAt!).toLocaleString()}`}</span>
+                  <span>Withdrawal cases: {item.withdrawalCaseCount === null ? "not captured" : `${item.withdrawalCaseCount} records • checked ${new Date(item.withdrawalsCheckedAt!).toLocaleString()}`}</span>
                   {item.resultCompleteness === "truncated" && <small>Result cap reached — reload a smaller area for a complete count.</small>}
                   <small className={`evidenceAge ${describeEvidenceAge(item.sourceCheckedAt)}`}>{ageLabel(item.sourceCheckedAt)}</small>
                 </div>

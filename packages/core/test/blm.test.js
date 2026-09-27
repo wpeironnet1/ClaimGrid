@@ -180,10 +180,27 @@ test("preserves capped-result provenance in saved research", () => {
   assert.equal(snapshot.resultCompleteness, "truncated");
   assert.equal(parseResearchSnapshots(JSON.stringify([snapshot]))[0].resultCompleteness, "truncated");
 });
+test("saved research preserves independent official-source evidence", () => {
+  const snapshot = createResearchSnapshot({
+    label: "Multi-source area", bounds: { west: -120, south: 38, east: -119, north: 39 }, activeClaimCount: 8,
+    surfaceManagementCount: 2, withdrawalCaseCount: 3, sourceCheckedAt: "2026-09-27T10:00:00Z",
+    surfaceManagementCheckedAt: "2026-09-27T10:00:01Z", withdrawalsCheckedAt: "2026-09-27T10:00:02Z"
+  });
+  const restored = parseResearchSnapshots(JSON.stringify([snapshot]))[0];
+  assert.equal(restored.surfaceManagementCount, 2);
+  assert.equal(restored.withdrawalCaseCount, 3);
+  assert.equal(restored.withdrawalsCheckedAt, "2026-09-27T10:00:02Z");
+  assert.deepEqual(parseResearchSnapshots(JSON.stringify([{ ...snapshot, withdrawalCaseCount: 1001 }])), []);
+  assert.deepEqual(parseResearchSnapshots(JSON.stringify([{ ...snapshot, surfaceManagementCheckedAt: "invalid" }])), []);
+  assert.deepEqual(parseResearchSnapshots(JSON.stringify([{ ...snapshot, withdrawalsCheckedAt: null }])), []);
+});
 test("marks legacy saved research completeness unknown and rejects altered values", () => {
   const legacy = createResearchSnapshot({ label: "Legacy", bounds: { west: -120, south: 38, east: -119, north: 39 }, activeClaimCount: 3, sourceCheckedAt: "2026-09-26T20:00:00.000Z" });
   const { resultCompleteness: ignored, ...withoutCompleteness } = legacy;
-  assert.equal(parseResearchSnapshots(JSON.stringify([withoutCompleteness]))[0].resultCompleteness, "unknown");
+  const restoredLegacy = parseResearchSnapshots(JSON.stringify([withoutCompleteness]))[0];
+  assert.equal(restoredLegacy.resultCompleteness, "unknown");
+  assert.equal(restoredLegacy.surfaceManagementCount, null);
+  assert.equal(restoredLegacy.withdrawalCaseCount, null);
   assert.deepEqual(parseResearchSnapshots(JSON.stringify([{ ...legacy, resultCompleteness: "complete-enough" }])), []);
 });
 test("ignores malformed persisted research data", () =>
