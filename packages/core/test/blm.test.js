@@ -69,9 +69,11 @@ const {
 const {
   billingConfiguration,
   isStripeFulfillmentEventSafe,
+  parseAccountSessionToken,
   parseBillingPlan,
   parseStripeWebhookEnvelope,
   parseStripeSignatureHeader,
+  parseVerifiedAccountSession,
 } = require("../dist/billing.js");
 const {
   LEGAL_NOTICE_REVIEWED_AT,
@@ -932,6 +934,9 @@ test("billing remains disabled until every server secret and price is valid", ()
       CLAIMGRID_ENTITLEMENT_STORE_URL:
         "https://accounts.claimgrid.example/stripe",
       CLAIMGRID_ENTITLEMENT_STORE_TOKEN: "x".repeat(32),
+      CLAIMGRID_ACCOUNT_SESSION_URL:
+        "https://accounts.claimgrid.example/session",
+      CLAIMGRID_ACCOUNT_SESSION_TOKEN: "y".repeat(32),
     }).ready,
     true,
   );
@@ -943,6 +948,19 @@ test("billing remains disabled until every server secret and price is valid", ()
     }).ready,
     false,
   );
+});
+
+test("checkout account identity fails closed unless the server session is verified", () => {
+  assert.equal(parseAccountSessionToken("short"), null);
+  assert.equal(parseAccountSessionToken("x".repeat(32)), "x".repeat(32));
+  assert.equal(parseAccountSessionToken(`${"x".repeat(31)}!`), null);
+  assert.deepEqual(
+    parseVerifiedAccountSession({ active: true, accountId: "account_12345", email: "miner@example.com" }),
+    { accountId: "account_12345", email: "miner@example.com" },
+  );
+  assert.equal(parseVerifiedAccountSession({ active: false, accountId: "account_12345", email: "miner@example.com" }), null);
+  assert.equal(parseVerifiedAccountSession({ active: true, accountId: "../unsafe", email: "miner@example.com" }), null);
+  assert.equal(parseVerifiedAccountSession({ active: true, accountId: "account_12345", email: "invalid" }), null);
 });
 
 test("parses Stripe signatures without accepting malformed digests", () => {

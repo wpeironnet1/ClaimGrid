@@ -1,4 +1,4 @@
-import { billingPlans, billingConfiguration, isStripePriceId, parseBillingPlan } from "@claimgrid/core";
+import { billingPlans, billingConfiguration, isStripePriceId, parseAccountSessionToken, parseBillingPlan, parseVerifiedAccountSession } from "@claimgrid/core";
 import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -17,13 +17,41 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Secure checkout is not configured yet. No payment was attempted." }, { status: 503, headers: { "Cache-Control": "no-store" } });
   }
 
+  const sessionToken = parseAccountSessionToken(request.cookies.get("claimgrid_session")?.value);
+  if (!sessionToken) return NextResponse.json({ error: "Sign in to a verified ClaimGrid account before starting checkout." }, { status: 401, headers: { "Cache-Control": "no-store" } });
+
+  let account;
+  try {
+    const sessionResponse = await fetch(process.env.CLAIMGRID_ACCOUNT_SESSION_URL!, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.CLAIMGRID_ACCOUNT_SESSION_TOKEN}`,
+        "Content-Type": "application/json",
+        "X-ClaimGrid-Session": sessionToken
+      },
+      body: "{}",
+      cache: "no-store",
+      signal: AbortSignal.timeout(5000)
+    });
+    const rawSession = await sessionResponse.text();
+    if (!sessionResponse.ok || rawSession.length > 8192) throw new Error("Account verification failed.");
+    account = parseVerifiedAccountSession(JSON.parse(rawSession));
+    if (!account) throw new Error("Account verification failed.");
+  } catch {
+    return NextResponse.json({ error: "Account verification is temporarily unavailable. No payment was attempted." }, { status: 503, headers: { "Cache-Control": "no-store" } });
+  }
+
   const body = new URLSearchParams({
     mode: "subscription",
     "line_items[0][price]": priceId,
     "line_items[0][quantity]": "1",
     success_url: `${expectedOrigin}/pricing?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${expectedOrigin}/pricing?checkout=cancelled`,
-    allow_promotion_codes: "true"
+    allow_promotion_codes: "true",
+    client_reference_id: account.accountId,
+    customer_email: account.email,
+    "metadata[claimgrid_account_id]": account.accountId,
+    "subscription_data[metadata][claimgrid_account_id]": account.accountId
   });
   try {
     const response = await fetch("https://api.stripe.com/v1/checkout/sessions", {
