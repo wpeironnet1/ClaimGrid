@@ -41,6 +41,11 @@ type SurfaceManagementResult = {
   exceededLimit: boolean;
   metadata: { retrievedAt: string; warning: string };
 };
+type WithdrawalsResult = {
+  records: { status: "authorized-interim" | "pending"; caseNumber: string | null; name: string | null; disposition: string | null; mineralSegregation: string | null; dataQuality: string | null }[];
+  exceededLimit: boolean;
+  metadata: { retrievedAt: string; warning: string };
+};
 const STORAGE_KEY = `claimgrid:research:v${RESEARCH_STORAGE_VERSION}`;
 const CLAIM_STORAGE_KEY = `claimgrid:claim-bookmarks:v${CLAIM_BOOKMARK_STORAGE_VERSION}`;
 const areas = [
@@ -99,6 +104,8 @@ export default function ClaimsExplorer() {
   const [sourceHealth, setSourceHealth] = useState<SourceHealth | null>(null);
   const [surfaceManagement, setSurfaceManagement] = useState<SurfaceManagementResult | null>(null);
   const [surfaceError, setSurfaceError] = useState("");
+  const [withdrawals, setWithdrawals] = useState<WithdrawalsResult | null>(null);
+  const [withdrawalsError, setWithdrawalsError] = useState("");
   const [selectedFeatureIndex, setSelectedFeatureIndex] = useState<
     number | null
   >(null);
@@ -157,6 +164,17 @@ export default function ClaimsExplorer() {
         if (reason.name !== "AbortError") setError(reason.message);
       })
       .finally(() => setLoading(false));
+    return () => controller.abort();
+  }, [area]);
+  useEffect(() => {
+    const controller = new AbortController();
+    setWithdrawals(null);
+    setWithdrawalsError("");
+    const query = new URLSearchParams({ west: String(area.west), south: String(area.south), east: String(area.east), north: String(area.north) });
+    fetch(`/api/blm/withdrawals?${query}`, { signal: controller.signal })
+      .then(async response => { if (!response.ok) throw new Error((await response.json()).error); return response.json(); })
+      .then(setWithdrawals)
+      .catch(reason => { if (reason.name !== "AbortError") setWithdrawalsError(reason.message); });
     return () => controller.abort();
   }, [area]);
   useEffect(() => {
@@ -530,6 +548,16 @@ export default function ClaimsExplorer() {
               {surfaceManagement.records.length > 8 && <small>Plus {surfaceManagement.records.length - 8} additional records.</small>}
               <p>{surfaceManagement.metadata.warning}</p>
               <small>Checked {new Date(surfaceManagement.metadata.retrievedAt).toLocaleString()}</small>
+            </>}
+          </section>
+          <section className="claimDetail" aria-live="polite">
+            <b>Withdrawal-case screening</b>
+            {withdrawalsError ? <p>{withdrawalsError}</p> : !withdrawals ? <p>Checking authorized/interim and pending BLM withdrawal cases…</p> : <>
+              <p>{withdrawals.records.length ? `${withdrawals.records.length}${withdrawals.exceededLimit ? "+" : ""} mapped withdrawal case records intersect this view.` : "No mapped withdrawal case records were returned. Unmapped cases may still exist."}</p>
+              {withdrawals.records.slice(0, 8).map((record, index) => <small key={`${record.status}-${record.caseNumber}-${index}`}>{record.status === "pending" ? "PENDING" : "AUTHORIZED / INTERIM"} · {record.name ?? record.caseNumber ?? "Unnamed case"}{record.dataQuality ? ` · quality ${record.dataQuality}` : ""}</small>)}
+              {withdrawals.records.length > 8 && <small>Plus {withdrawals.records.length - 8} additional mapped records.</small>}
+              <p>{withdrawals.metadata.warning}</p>
+              <small>Checked {new Date(withdrawals.metadata.retrievedAt).toLocaleString()}</small>
             </>}
           </section>
           <a

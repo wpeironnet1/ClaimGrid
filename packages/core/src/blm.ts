@@ -1,5 +1,6 @@
 export const BLM_ACTIVE_CLAIMS_LAYER = "https://gis.blm.gov/nlsdb/rest/services/Mining_Claims/MiningClaims/MapServer/1";
 export const BLM_SURFACE_MANAGEMENT_LAYER = "https://gis.blm.gov/arcgis/rest/services/lands/BLM_Natl_SMA_LimitedScale/MapServer/1";
+export const BLM_WITHDRAWALS_SERVICE = "https://gis.blm.gov/nlsdb/rest/services/Land_Tenure/Withdrawals_Case_Disp/MapServer";
 export type Bounds = { west: number; south: number; east: number; north: number };
 export type BoundsValidation = { ok: true; bounds: Bounds } | { ok: false; error: string };
 const US_LIMITS: Bounds = { west: -180, south: 18, east: 180, north: 72 };
@@ -55,6 +56,43 @@ export function sanitizeSurfaceManagementResponse(value: unknown): SurfaceManage
     if (!seen.has(key)) { seen.add(key); records.push(record); }
   }
   return { records, exceededLimit: response.exceededTransferLimit === true || response.features.length === 200 };
+}
+
+export type WithdrawalStatus = "authorized-interim" | "pending";
+export interface WithdrawalRecord {
+  status: WithdrawalStatus;
+  caseNumber: string | null;
+  name: string | null;
+  disposition: string | null;
+  mineralSegregation: string | null;
+  surfaceSegregation: string | null;
+  dataQuality: string | null;
+  state: string | null;
+}
+
+export function buildWithdrawalsQuery(bounds: Bounds, status: WithdrawalStatus): URL {
+  const layer = status === "authorized-interim" ? 0 : 1;
+  const url = new URL(`${BLM_WITHDRAWALS_SERVICE}/${layer}/query`);
+  url.search = new URLSearchParams({ where: "1=1", geometry: `${bounds.west},${bounds.south},${bounds.east},${bounds.north}`, geometryType: "esriGeometryEnvelope", inSR: "4326", spatialRel: "esriSpatialRelIntersects", outFields: "CSE_NR,CSE_NAME,CSE_DISP,SEG_MIN,SEG_SUR,QLTY,GEO_STATE", returnGeometry: "false", resultRecordCount: "500", f: "json" }).toString();
+  return url;
+}
+
+export function sanitizeWithdrawalResponse(value: unknown, status: WithdrawalStatus): { records: WithdrawalRecord[]; exceededLimit: boolean } | null {
+  if (!value || typeof value !== "object") return null;
+  const response = value as { features?: unknown; exceededTransferLimit?: unknown; error?: unknown };
+  if (response.error || !Array.isArray(response.features) || response.features.length > 500) return null;
+  const records: WithdrawalRecord[] = [];
+  const seen = new Set<string>();
+  for (const feature of response.features) {
+    if (!feature || typeof feature !== "object") return null;
+    const attributes = (feature as { attributes?: unknown }).attributes;
+    if (!attributes || typeof attributes !== "object") return null;
+    const source = attributes as Record<string, unknown>;
+    const record: WithdrawalRecord = { status, caseNumber: boundedText(source.CSE_NR, 255), name: boundedText(source.CSE_NAME, 255), disposition: boundedText(source.CSE_DISP, 255), mineralSegregation: boundedText(source.SEG_MIN, 255), surfaceSegregation: boundedText(source.SEG_SUR, 255), dataQuality: boundedText(source.QLTY, 255), state: boundedText(source.GEO_STATE, 2) };
+    const key = `${status}:${record.caseNumber ?? JSON.stringify(record)}`;
+    if (!seen.has(key)) { seen.add(key); records.push(record); }
+  }
+  return { records, exceededLimit: response.exceededTransferLimit === true || response.features.length === 500 };
 }
 
 

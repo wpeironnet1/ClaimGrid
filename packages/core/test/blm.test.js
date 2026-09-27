@@ -4,10 +4,12 @@ const {
   assessBlmLayerMetadata,
   buildActiveClaimsQuery,
   buildSurfaceManagementQuery,
+  buildWithdrawalsQuery,
   createBlmResultMetadata,
   describeSourceFreshness,
   sanitizeActiveClaimsGeoJson,
   sanitizeSurfaceManagementResponse,
+  sanitizeWithdrawalResponse,
   summarizeClaimProperties,
   validateResearchBounds,
 } = require("../dist/blm.js");
@@ -120,6 +122,23 @@ test("sanitizes surface-management records without treating them as land status"
   ] }), { records: [{ agencyCode: "BLM", unitName: "Example Field Office", unitType: "Field Office", state: "NV" }], exceededLimit: false });
   assert.equal(sanitizeSurfaceManagementResponse({ error: { message: "upstream failure" } }), null);
   assert.equal(sanitizeSurfaceManagementResponse({ features: [{ attributes: null }] }), null);
+});
+test("queries current withdrawal categories without requesting geometry", () => {
+  const bounds = { west: -120, south: 38, east: -119, north: 39 };
+  const authorized = buildWithdrawalsQuery(bounds, "authorized-interim");
+  const pending = buildWithdrawalsQuery(bounds, "pending");
+  assert.match(authorized.pathname, /MapServer\/0\/query$/);
+  assert.match(pending.pathname, /MapServer\/1\/query$/);
+  assert.equal(authorized.searchParams.get("returnGeometry"), "false");
+  assert.match(authorized.searchParams.get("outFields"), /QLTY/);
+});
+test("withdrawal screening preserves category and data quality while deduplicating cases", () => {
+  const summary = sanitizeWithdrawalResponse({ features: [
+    { attributes: { CSE_NR: "NMC123", CSE_NAME: "Example withdrawal", CSE_DISP: "Authorized", SEG_MIN: "All minerals", SEG_SUR: "None", QLTY: "2", GEO_STATE: "NM", SECRET: "discard" } },
+    { attributes: { CSE_NR: "NMC123", CSE_NAME: "Duplicate geometry", QLTY: "8" } },
+  ] }, "authorized-interim");
+  assert.deepEqual(summary, { records: [{ status: "authorized-interim", caseNumber: "NMC123", name: "Example withdrawal", disposition: "Authorized", mineralSegregation: "All minerals", surfaceSegregation: "None", dataQuality: "2", state: "NM" }], exceededLimit: false });
+  assert.equal(sanitizeWithdrawalResponse({ error: { message: "failure" } }, "pending"), null);
 });
 test("creates source metadata from the actual BLM retrieval time", () => {
   const metadata = createBlmResultMetadata({ type: "FeatureCollection", features: [], exceededTransferLimit: false }, "2026-09-27T00:00:00.000Z");
