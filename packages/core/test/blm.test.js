@@ -30,6 +30,7 @@ const {
   newMexicoWorkflow,
   nevadaWorkflow,
   oregonWorkflow,
+  southDakotaWorkflow,
   utahWorkflow,
   parseWorkflowProgress,
 } = require("../dist/state-workflows.js");
@@ -395,7 +396,7 @@ test("classifies filing deadlines by urgency", () => {
 });
 test("exports source-backed deadlines as calendar reminders", () => {
   const calendar = createDeadlineCalendar(
-    [{ id: "federal-2026-12-13", kind: "federal", label: "BLM recording â 90-day maximum", dueDate: "2026-12-13", authority: "U.S. Bureau of Land Management", sourceUrl: "https://www.blm.gov/mining-claims", verifiedAt: "2026-09-14", manuallyVerified: true }],
+    [{ id: "federal-2026-12-13", kind: "federal", label: "BLM recording — 90-day maximum", dueDate: "2026-12-13", authority: "U.S. Bureau of Land Management", sourceUrl: "https://www.blm.gov/mining-claims", verifiedAt: "2026-09-14", manuallyVerified: true }],
     "Quartz, Ridge; Project",
     new Date("2026-09-20T20:00:00Z"),
   );
@@ -1073,6 +1074,19 @@ test("Alaska workflow preserves selected-land and annual-maintenance safeguards"
   assert.ok(alaskaWorkflow.sources.some((source) => /State-selected Land/.test(source.label)));
   assert.ok(alaskaWorkflow.steps.some((step) => /automatic abandonment/i.test(step.description)));
   assert.ok(alaskaWorkflow.sources.some((source) => source.authority === "Alaska Department of Natural Resources"));
+});
+test("South Dakota workflow separates claim location from exploration and mining permission", () => {
+  assert.equal(southDakotaWorkflow.state, "SD");
+  assert.equal(southDakotaWorkflow.steps.length, 7);
+  assert.ok(southDakotaWorkflow.steps.some((step) => /exploration and mine permits/i.test(step.title)));
+  assert.ok(southDakotaWorkflow.steps.some((step) => /does not include exclusive surface rights/i.test(step.description)));
+  assert.match(southDakotaWorkflow.notice, /do not establish legal availability/i);
+});
+test("South Dakota workflow preserves source dates and responsible authorities", () => {
+  assert.equal(southDakotaWorkflow.reviewedAt, "2026-09-26");
+  assert.ok(southDakotaWorkflow.sources.every((source) => source.checkedAt === "2026-09-26"));
+  assert.ok(southDakotaWorkflow.sources.some((source) => source.authority === "South Dakota Department of Agriculture and Natural Resources"));
+  assert.ok(southDakotaWorkflow.sources.some((source) => /Montana\/Dakotas Mining Claim Packet/.test(source.label)));
 });
 test("rejects unsafe saved research evidence", () => { assert.deepEqual(parseResearchSnapshots(JSON.stringify([{ id:"bad", label:"Invalid", bounds:{west:-120,south:38,east:-110,north:39}, activeClaimCount:-1, sourceCheckedAt:"never", savedAt:"never", screeningOnly:true }])), []); assert.throws(() => createResearchSnapshot({ label:"Oversized", bounds:{west:-120,south:38,east:-110,north:39}, activeClaimCount:0, sourceCheckedAt:"2026-09-20T20:00:00Z" }), /five degrees/i); });
 test("claim bookmark storage rejects invalid bounds and timestamps", () => { const valid=createClaimBookmark({recordKey:"NV-1",areaLabel:"Test",bounds:{west:-120,south:38,east:-119,north:39},details:{caseNumber:"NV-1",claimName:null,disposition:null,commodity:null,quality:null,recordedAcres:null,state:"NV"},sourceCheckedAt:"2026-09-20T20:00:00Z"},new Date("2026-09-20T21:00:00Z")); assert.deepEqual(parseClaimBookmarks(JSON.stringify([{...valid,sourceCheckedAt:"invalid"}])),[]); assert.deepEqual(parseClaimBookmarks(JSON.stringify([{...valid,bounds:{west:-120,south:38,east:-110,north:39}}])),[]); });
