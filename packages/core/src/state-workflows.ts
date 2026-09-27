@@ -291,6 +291,30 @@ export const southDakotaWorkflow: StateWorkflow = {
   ]
 };
 
+export const washingtonWorkflow: StateWorkflow = {
+  state: "WA",
+  title: "Washington claim-location research checklist",
+  reviewedAt: "2026-09-26",
+  notice: "This checklist organizes official sources; it does not determine mineral-entry status, validate discovery, authorize access, prospecting, aquatic work, mining, or surface disturbance, or certify compliance. Public-land appearance and a mapped gap do not establish legal availability.",
+  steps: [
+    { id: "wa-status", phase: "research", title: "Verify land and mineral-entry status", description: "Identify the legal description, surface manager, mineral estate, current claims, withdrawals, closures, acquired lands, and special-area restrictions using current BLM title and case records. Mining claims cannot be located on every category of federal or state-managed land, and an empty map area is not proof of open ground.", verification: "Save source dates and confirm uncertain status with the BLM Oregon–Washington office and the responsible surface manager." },
+    { id: "wa-access", phase: "research", title: "Confirm ownership, access, and the applicable mineral system", description: "Obtain landowner permission where required and distinguish federal public-domain minerals from Washington state-owned minerals, private minerals, and acquired federal minerals. State mineral prospecting leases and mining contracts are separate from federal mining claims.", verification: "Confirm surface and mineral ownership, lawful access, and the applicable authorization system before entering or staking." },
+    { id: "wa-permits", phase: "research", title: "Separate claim location from Washington activity permits", description: "A recorded claim does not authorize prospecting or placer work in or near water, excavation, road use, mechanized equipment, mining, or reclamation. Washington hydraulic-project approval, surface-mining requirements, water rules, and federal surface-use authorization may apply independently.", verification: "Obtain written applicability and authorization determinations from WDFW, DNR, the surface manager, and other responsible agencies before activity or disturbance." },
+    { id: "wa-county", phase: "research", title: "Confirm county and claim-type requirements", description: "Identify each Washington county containing the proposed claim and review current RCW Chapter 78.08 requirements for the applicable lode, placer, mill, or tunnel location, including discovery, notice, marking, description, and recording content.", verification: "Confirm current formatting, fees, accepted filing methods, indexing rules, and deadlines directly with each county auditor or recording office." },
+    { id: "wa-field", phase: "field", title: "Inspect, discover, mark, and document the site", description: "Check lawful access, prior claim records, existing monuments and occupation, protected resources, and physical exposure supporting a valuable locatable-mineral discovery. Follow current federal and Washington marking requirements without unauthorized disturbance.", verification: "Online screening and phone GPS cannot establish discovery, legal boundaries, ownership, access rights, or availability." },
+    { id: "wa-record", phase: "county", title: "Record the location document with the county", description: "Prepare and record the required location notice or certificate and description in the correct county within the applicable Washington deadline. RCW Chapter 78.08 includes claim-type-specific requirements, including a 90-day county recording rule for lode discoveries.", verification: "Retain the recorded copy, receipt, document number, and timely-delivery evidence; recorder acceptance does not establish validity." },
+    { id: "wa-blm", phase: "federal", title: "Record with BLM Oregon–Washington", description: "File the required location document, map, claimant information, and current fees with the BLM Oregon–Washington State Office within 90 days after physical location, even when a state or county action is due sooner.", verification: "Confirm BLM receipt, assigned serial number, and the resulting MLRS record; filing and payment do not cure an invalid location." }
+  ],
+  sources: [
+    { label: "Washington RCW Chapter 78.08 — Location of Mining Claims", authority: "Washington State Legislature", checkedAt: "2026-09-26", url: "https://app.leg.wa.gov/rcw/default.aspx?cite=78.08&full=true" },
+    { label: "Washington DNR — Mining Laws of the State of Washington", authority: "Washington Department of Natural Resources", checkedAt: "2026-09-26", url: "https://dnr.wa.gov/sites/default/files/2025-04/ger_b41_mining_laws_wa.pdf" },
+    { label: "WDFW — Mineral Prospecting and Placer Mining", authority: "Washington Department of Fish and Wildlife", checkedAt: "2026-09-26", url: "https://wdfw.wa.gov/licenses/environmental/hpa/types/prospecting" },
+    { label: "Washington DNR — Mining and Mineral Leases", authority: "Washington Department of Natural Resources", checkedAt: "2026-09-26", url: "https://dnr.wa.gov/product-sales-and-leasing/mining-and-mineral-leases" },
+    { label: "Oregon/Washington Mining Claim Packet", authority: "U.S. Bureau of Land Management", checkedAt: "2026-09-26", url: "https://www.blm.gov/oregon-washington/public-room/handbook/oregonwashington-mining-claim-packet" },
+    { label: "Mineral & Land Records System", authority: "U.S. Bureau of Land Management", checkedAt: "2026-09-26", url: "https://mlrs.blm.gov/" }
+  ]
+};
+
 export function parseWorkflowProgress(raw: string | null, allowedIds: readonly string[]): string[] {
   if (!raw) return [];
   try {

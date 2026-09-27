@@ -31,6 +31,7 @@ const {
   nevadaWorkflow,
   oregonWorkflow,
   southDakotaWorkflow,
+  washingtonWorkflow,
   utahWorkflow,
   parseWorkflowProgress,
 } = require("../dist/state-workflows.js");
@@ -1087,6 +1088,20 @@ test("South Dakota workflow preserves source dates and responsible authorities",
   assert.ok(southDakotaWorkflow.sources.every((source) => source.checkedAt === "2026-09-26"));
   assert.ok(southDakotaWorkflow.sources.some((source) => source.authority === "South Dakota Department of Agriculture and Natural Resources"));
   assert.ok(southDakotaWorkflow.sources.some((source) => /Montana\/Dakotas Mining Claim Packet/.test(source.label)));
+});
+test("Washington workflow separates claim location from access and activity permission", () => {
+  assert.equal(washingtonWorkflow.state, "WA");
+  assert.equal(washingtonWorkflow.steps.length, 7);
+  assert.ok(washingtonWorkflow.steps.some((step) => /Washington activity permits/i.test(step.title)));
+  assert.ok(washingtonWorkflow.steps.some((step) => /does not authorize prospecting or placer work/i.test(step.description)));
+  assert.match(washingtonWorkflow.notice, /do not establish legal availability/i);
+});
+test("Washington workflow preserves source dates and responsible authorities", () => {
+  assert.equal(washingtonWorkflow.reviewedAt, "2026-09-26");
+  assert.ok(washingtonWorkflow.sources.every((source) => source.checkedAt === "2026-09-26"));
+  assert.ok(washingtonWorkflow.sources.some((source) => source.authority === "Washington State Legislature"));
+  assert.ok(washingtonWorkflow.sources.some((source) => source.authority === "Washington Department of Fish and Wildlife"));
+  assert.ok(washingtonWorkflow.sources.some((source) => /Oregon\/Washington Mining Claim Packet/.test(source.label)));
 });
 test("rejects unsafe saved research evidence", () => { assert.deepEqual(parseResearchSnapshots(JSON.stringify([{ id:"bad", label:"Invalid", bounds:{west:-120,south:38,east:-110,north:39}, activeClaimCount:-1, sourceCheckedAt:"never", savedAt:"never", screeningOnly:true }])), []); assert.throws(() => createResearchSnapshot({ label:"Oversized", bounds:{west:-120,south:38,east:-110,north:39}, activeClaimCount:0, sourceCheckedAt:"2026-09-20T20:00:00Z" }), /five degrees/i); });
 test("claim bookmark storage rejects invalid bounds and timestamps", () => { const valid=createClaimBookmark({recordKey:"NV-1",areaLabel:"Test",bounds:{west:-120,south:38,east:-119,north:39},details:{caseNumber:"NV-1",claimName:null,disposition:null,commodity:null,quality:null,recordedAcres:null,state:"NV"},sourceCheckedAt:"2026-09-20T20:00:00Z"},new Date("2026-09-20T21:00:00Z")); assert.deepEqual(parseClaimBookmarks(JSON.stringify([{...valid,sourceCheckedAt:"invalid"}])),[]); assert.deepEqual(parseClaimBookmarks(JSON.stringify([{...valid,bounds:{west:-120,south:38,east:-110,north:39}}])),[]); });
