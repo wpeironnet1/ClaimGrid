@@ -53,6 +53,12 @@ type WithdrawalsResult = {
   exceededLimit: boolean;
   metadata: { retrievedAt: string; warning: string };
 };
+type PlssResult = {
+  center: { longitude: number; latitude: number };
+  townships: { plssId: string | null; label: string | null; state: string | null; principalMeridian: string | null; surveyName: string | null; sourceDate: string | null }[];
+  sections: { plssId: string | null; label: string | null; divisionId: string | null; divisionType: string | null; sourceDate: string | null }[];
+  metadata: { retrievedAt: string; warning: string };
+};
 const STORAGE_KEY = `claimgrid:research:v${RESEARCH_STORAGE_VERSION}`;
 const CLAIM_STORAGE_KEY = `claimgrid:claim-bookmarks:v${CLAIM_BOOKMARK_STORAGE_VERSION}`;
 const areas = [
@@ -115,6 +121,8 @@ export default function ClaimsExplorer() {
   const [withdrawalsError, setWithdrawalsError] = useState("");
   const [closedClaims, setClosedClaims] = useState<ClosedClaimsResult | null>(null);
   const [closedClaimsError, setClosedClaimsError] = useState("");
+  const [plss, setPlss] = useState<PlssResult | null>(null);
+  const [plssError, setPlssError] = useState("");
   const [selectedFeatureIndex, setSelectedFeatureIndex] = useState<
     number | null
   >(null);
@@ -175,6 +183,12 @@ export default function ClaimsExplorer() {
       .finally(() => setLoading(false));
     return () => controller.abort();
   }, [area]);
+  useEffect(() => {
+    const controller = new AbortController(); setPlss(null); setPlssError("");
+    const query = new URLSearchParams({ west:String(area.west), south:String(area.south), east:String(area.east), north:String(area.north) });
+    fetch(`/api/blm/plss-reference?${query}`,{signal:controller.signal}).then(async response=>{if(!response.ok)throw new Error((await response.json()).error);return response.json();}).then(setPlss).catch(reason=>{if(reason.name!=="AbortError")setPlssError(reason.message);});
+    return ()=>controller.abort();
+  },[area]);
   useEffect(() => {
     const controller = new AbortController();
     setWithdrawals(null);
@@ -313,6 +327,8 @@ export default function ClaimsExplorer() {
       closedClaimsCheckedAt: closedClaims?.metadata.retrievedAt ?? null,
       surfaceManagementCheckedAt: surfaceManagement?.metadata.retrievedAt ?? null,
       withdrawalsCheckedAt: withdrawals?.metadata.retrievedAt ?? null,
+      plssReference: plss ? [plss.townships[0]?.label ?? plss.townships[0]?.plssId, plss.sections[0]?.label ?? plss.sections[0]?.divisionId].filter(Boolean).join(" · ") || "No PLSS reference returned at viewport center" : null,
+      plssCheckedAt: plss?.metadata.retrievedAt ?? null,
     });
     const next = upsertResearchSnapshot(saved, snapshot);
     setSaved(next);
@@ -581,6 +597,15 @@ export default function ClaimsExplorer() {
               <p>{closedClaims.metadata.warning}</p><small>Checked {new Date(closedClaims.metadata.retrievedAt).toLocaleString()}</small>
             </>}
           </section>
+          <section className="claimDetail" aria-live="polite">
+            <b>PLSS center reference</b>
+            {plssError ? <p>{plssError}</p> : !plss ? <p>Checking the official BLM township and section layers…</p> : <>
+              <p>Reference point: {plss.center.latitude.toFixed(6)}, {plss.center.longitude.toFixed(6)}</p>
+              {plss.townships.length ? plss.townships.map((record,index)=><small key={`${record.plssId}-${index}`}>Township: {record.label ?? record.plssId ?? "Unlabeled"}{record.principalMeridian ? ` · ${record.principalMeridian}` : ""}{record.surveyName ? ` · ${record.surveyName}` : ""}</small>) : <small>No township reference was returned at the viewport center.</small>}
+              {plss.sections.length ? plss.sections.map((record,index)=><small key={`${record.divisionId}-${index}`}>Section / division: {record.label ?? record.divisionId ?? "Unlabeled"}{record.divisionType ? ` · ${record.divisionType}` : ""}</small>) : <small>No section reference was returned at the viewport center.</small>}
+              <p>{plss.metadata.warning}</p><small>Checked {new Date(plss.metadata.retrievedAt).toLocaleString()}</small>
+            </>}
+          </section>
           <a
             className="darkButton explorerButton"
             href="https://mlrs.blm.gov/s/"
@@ -614,6 +639,7 @@ export default function ClaimsExplorer() {
                   <span>Surface management: {item.surfaceManagementCount === null ? "not captured" : `${item.surfaceManagementCount} records • checked ${new Date(item.surfaceManagementCheckedAt!).toLocaleString()}`}</span>
                   <span>Closed-claim history: {item.closedClaimCount === null ? "not captured" : `${item.closedClaimCount} records • checked ${new Date(item.closedClaimsCheckedAt!).toLocaleString()}`}</span>
                   <span>Withdrawal cases: {item.withdrawalCaseCount === null ? "not captured" : `${item.withdrawalCaseCount} records • checked ${new Date(item.withdrawalsCheckedAt!).toLocaleString()}`}</span>
+                  <span>PLSS center reference: {item.plssReference === null ? "not captured" : `${item.plssReference} • checked ${new Date(item.plssCheckedAt!).toLocaleString()}`}</span>
                   {item.resultCompleteness === "truncated" && <small>Result cap reached — reload a smaller area for a complete count.</small>}
                   <small className={`evidenceAge ${describeEvidenceAge(item.sourceCheckedAt)}`}>{ageLabel(item.sourceCheckedAt)}</small>
                 </div>

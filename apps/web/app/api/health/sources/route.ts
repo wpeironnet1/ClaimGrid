@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { assessArcGisLayerMetadata, BLM_ACTIVE_CLAIMS_LAYER, BLM_CLOSED_CLAIMS_LAYER, BLM_SURFACE_MANAGEMENT_LAYER, BLM_WITHDRAWALS_SERVICE, createSafeServerErrorEvent } from "@claimgrid/core";
+import { assessArcGisLayerMetadata, BLM_ACTIVE_CLAIMS_LAYER, BLM_CLOSED_CLAIMS_LAYER, BLM_PLSS_SERVICE, BLM_SURFACE_MANAGEMENT_LAYER, BLM_WITHDRAWALS_SERVICE, createSafeServerErrorEvent } from "@claimgrid/core";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,6 +13,8 @@ export async function GET(){
       { id: "surface-management", source: "Surface Management Agency", sourceUrl: BLM_SURFACE_MANAGEMENT_LAYER, layerName: "Surface Management Agency", requiredFields: ["ADMIN_AGENCY_CODE","ADMIN_UNIT_NAME","ADMIN_UNIT_TYPE","ADMIN_ST"] },
       { id: "withdrawals-authorized", source: "MLRS Withdrawals — Authorized/Interim", sourceUrl: `${BLM_WITHDRAWALS_SERVICE}/0`, layerName: "Authorized/Interim", requiredFields: ["CSE_NR","CSE_NAME","CSE_DISP","SEG_MIN","SEG_SUR","QLTY","GEO_STATE"] },
       { id: "withdrawals-pending", source: "MLRS Withdrawals — Pending", sourceUrl: `${BLM_WITHDRAWALS_SERVICE}/1`, layerName: "Pending", requiredFields: ["CSE_NR","CSE_NAME","CSE_DISP","SEG_MIN","SEG_SUR","QLTY","GEO_STATE"] },
+      { id: "plss-township", source: "National PLSS — Township", sourceUrl: `${BLM_PLSS_SERVICE}/1`, layerName: "PLSS Township", requiredFields: ["STATEABBR","PRINMER","TWNSHPLAB","PLSSID","SRVNAME","SOURCEDATE","SOURCEREF"] },
+      { id: "plss-section", source: "National PLSS — Section", sourceUrl: `${BLM_PLSS_SERVICE}/2`, layerName: "PLSS Section", requiredFields: ["PLSSID","FRSTDIVID","FRSTDIVTXT","FRSTDIVNO","FRSTDIVLAB","SOURCEDATE","SOURCEREF"] },
     ] as const;
     const results = await Promise.all(definitions.map(async definition => {
       try {

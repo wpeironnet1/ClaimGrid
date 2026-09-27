@@ -6,8 +6,8 @@
 - BLM MLRS closed mining claims are displayed only as historical screening evidence; closure never implies that land reopened or is available
 - BLM national Surface Management Agency query data (screening context only; not mineral ownership, withdrawal status, access, or availability)
 - BLM MLRS authorized/interim and pending withdrawal case layers, including source data-quality caveats and warnings about unmapped cases
-- Automated schema monitoring for the active-claims, closed-claims, surface-management, and both withdrawal layers; partial failures report degraded source health
-- BLM Public Land Survey System data
+- Automated schema monitoring for the active-claims, closed-claims, surface-management, both withdrawal layers, and PLSS township/section layers; partial failures report degraded source health
+- BLM National Public Land Survey System township and section references are queried only at the viewport center and retained with source timestamps; they are not surveys, boundary determinations, title evidence, or filing-ready legal descriptions
 - BLM withdrawals and land-status research links
 - USFS land and authoritative state/county recording resources
 

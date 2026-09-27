@@ -2,6 +2,7 @@ export const BLM_ACTIVE_CLAIMS_LAYER = "https://gis.blm.gov/nlsdb/rest/services/
 export const BLM_CLOSED_CLAIMS_LAYER = "https://gis.blm.gov/nlsdb/rest/services/Mining_Claims/MiningClaims/MapServer/2";
 export const BLM_SURFACE_MANAGEMENT_LAYER = "https://gis.blm.gov/arcgis/rest/services/lands/BLM_Natl_SMA_LimitedScale/MapServer/1";
 export const BLM_WITHDRAWALS_SERVICE = "https://gis.blm.gov/nlsdb/rest/services/Land_Tenure/Withdrawals_Case_Disp/MapServer";
+export const BLM_PLSS_SERVICE = "https://gis.blm.gov/arcgis/rest/services/Cadastral/BLM_Natl_PLSS_CadNSDI/MapServer";
 export type Bounds = { west: number; south: number; east: number; north: number };
 export type BoundsValidation = { ok: true; bounds: Bounds } | { ok: false; error: string };
 const US_LIMITS: Bounds = { west: -180, south: 18, east: 180, north: 72 };
@@ -25,6 +26,63 @@ export function buildClosedClaimsQuery(bounds: Bounds): URL {
   const url = new URL(`${BLM_CLOSED_CLAIMS_LAYER}/query`);
   url.search = new URLSearchParams({ where: "1=1", geometry: `${bounds.west},${bounds.south},${bounds.east},${bounds.north}`, geometryType: "esriGeometryEnvelope", inSR: "4326", spatialRel: "esriSpatialRelIntersects", outFields: "CSE_NR,CSE_NAME,CSE_DISP,BLM_PROD,QLTY,RCRD_ACRS,GEO_STATE,MC_PATENTED,MC_EXCLUDED,MC_CONVEYED", returnGeometry: "false", resultRecordCount: "500", f: "json" }).toString();
   return url;
+}
+
+export type PlssLayer = "township" | "section";
+export function buildPlssQuery(bounds: Bounds, layer: PlssLayer): URL {
+  const layerId = layer === "township" ? 1 : 2;
+  const longitude = (bounds.west + bounds.east) / 2;
+  const latitude = (bounds.south + bounds.north) / 2;
+  const outFields = layer === "township"
+    ? "STATEABBR,PRINMER,TWNSHPLAB,PLSSID,SRVNAME,SURVTYPTXT,SOURCEDATE,SOURCEREF,STEWARD"
+    : "PLSSID,FRSTDIVID,FRSTDIVTXT,FRSTDIVNO,FRSTDIVLAB,SURVTYPTXT,SOURCEDATE,SOURCEREF";
+  const url = new URL(`${BLM_PLSS_SERVICE}/${layerId}/query`);
+  url.search = new URLSearchParams({ where: "1=1", geometry: `${longitude},${latitude}`, geometryType: "esriGeometryPoint", inSR: "4326", spatialRel: "esriSpatialRelIntersects", outFields, returnGeometry: "false", resultRecordCount: "5", f: "json" }).toString();
+  return url;
+}
+
+export interface PlssReferenceRecord {
+  kind: PlssLayer;
+  plssId: string | null;
+  label: string | null;
+  state: string | null;
+  principalMeridian: string | null;
+  surveyName: string | null;
+  divisionId: string | null;
+  divisionType: string | null;
+  sourceDate: string | null;
+  sourceReference: string | null;
+}
+
+export function sanitizePlssResponse(value: unknown, kind: PlssLayer): PlssReferenceRecord[] | null {
+  if (!value || typeof value !== "object") return null;
+  const response = value as { features?: unknown; error?: unknown };
+  if (response.error || !Array.isArray(response.features) || response.features.length > 5) return null;
+  const records: PlssReferenceRecord[] = [];
+  const seen = new Set<string>();
+  for (const feature of response.features) {
+    if (!feature || typeof feature !== "object") return null;
+    const attributes = (feature as { attributes?: unknown }).attributes;
+    if (!attributes || typeof attributes !== "object") return null;
+    const source = attributes as Record<string, unknown>;
+    const rawDate = source.SOURCEDATE;
+    const sourceDate = typeof rawDate === "number" && Number.isFinite(rawDate) && rawDate >= 0 && rawDate <= 8_640_000_000_000_000 ? new Date(rawDate).toISOString() : null;
+    const record: PlssReferenceRecord = {
+      kind,
+      plssId: boundedText(source.PLSSID, 50),
+      label: boundedText(kind === "township" ? source.TWNSHPLAB : source.FRSTDIVLAB, 20),
+      state: kind === "township" ? boundedText(source.STATEABBR, 2) : null,
+      principalMeridian: kind === "township" ? boundedText(source.PRINMER, 40) : null,
+      surveyName: kind === "township" ? boundedText(source.SRVNAME, 60) : null,
+      divisionId: kind === "section" ? boundedText(source.FRSTDIVID, 50) : null,
+      divisionType: kind === "section" ? boundedText(source.FRSTDIVTXT, 50) : boundedText(source.SURVTYPTXT, 50),
+      sourceDate,
+      sourceReference: boundedText(source.SOURCEREF, 100),
+    };
+    const key = `${kind}:${record.plssId ?? ""}:${record.divisionId ?? ""}:${record.label ?? ""}`;
+    if (!seen.has(key)) { seen.add(key); records.push(record); }
+  }
+  return records;
 }
 
 export interface ClosedClaimRecord { caseNumber: string | null; name: string | null; disposition: string | null; product: string | null; dataQuality: string | null; recordedAcres: number | null; state: string | null; patented: string | null; excluded: string | null; conveyed: string | null }

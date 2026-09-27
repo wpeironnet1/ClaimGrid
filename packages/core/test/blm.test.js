@@ -5,12 +5,14 @@ const {
   assessArcGisLayerMetadata,
   buildActiveClaimsQuery,
   buildClosedClaimsQuery,
+  buildPlssQuery,
   buildSurfaceManagementQuery,
   buildWithdrawalsQuery,
   createBlmResultMetadata,
   describeSourceFreshness,
   sanitizeActiveClaimsGeoJson,
   sanitizeClosedClaimsResponse,
+  sanitizePlssResponse,
   sanitizeSurfaceManagementResponse,
   sanitizeWithdrawalResponse,
   summarizeClaimProperties,
@@ -118,6 +120,20 @@ test("queries and sanitizes closed claims as non-geometric history", () => {
   assert.equal(summary.records.length,1); assert.equal(summary.records[0].disposition,"Closed"); assert.equal(summary.records[0].recordedAcres,20);
   assert.equal(sanitizeClosedClaimsResponse({error:{message:"failure"}}),null);
 });
+test("queries a bounded PLSS center reference without requesting geometry", () => {
+  const bounds={west:-120,south:38,east:-119,north:39};
+  const township=buildPlssQuery(bounds,"township"); const section=buildPlssQuery(bounds,"section");
+  assert.match(township.pathname,/MapServer\/1\/query$/); assert.match(section.pathname,/MapServer\/2\/query$/);
+  assert.equal(township.searchParams.get("geometry"),"-119.5,38.5"); assert.equal(section.searchParams.get("returnGeometry"),"false");
+  assert.equal(section.searchParams.get("resultRecordCount"),"5");
+});
+test("sanitizes PLSS references and preserves source-document dates", () => {
+  const township=sanitizePlssResponse({features:[{attributes:{PLSSID:"MT01N02W",TWNSHPLAB:"T1N R2W",STATEABBR:"MT",PRINMER:"Montana Principal Meridian",SRVNAME:"Government Township",SOURCEDATE:1789430400000,SOURCEREF:"Plat 123",SECRET:"drop"}}]},"township");
+  assert.equal(township[0].label,"T1N R2W"); assert.equal(township[0].sourceDate,"2026-09-15T00:00:00.000Z");
+  const section=sanitizePlssResponse({features:[{attributes:{PLSSID:"MT01N02W",FRSTDIVID:"MT01N02W06",FRSTDIVLAB:"Sec 6",FRSTDIVTXT:"Section"}}]},"section");
+  assert.equal(section[0].divisionId,"MT01N02W06"); assert.equal(section[0].state,null);
+  assert.equal(sanitizePlssResponse({error:{message:"failure"}},"section"),null);
+});
 test("builds a bounded non-geometric surface-management query", () => {
   const url = buildSurfaceManagementQuery({ west: -120, south: 38, east: -119, north: 39 });
   assert.equal(url.searchParams.get("returnGeometry"), "false");
@@ -193,16 +209,18 @@ test("saved research preserves independent official-source evidence", () => {
   const snapshot = createResearchSnapshot({
     label: "Multi-source area", bounds: { west: -120, south: 38, east: -119, north: 39 }, activeClaimCount: 8,
     surfaceManagementCount: 2, withdrawalCaseCount: 3, sourceCheckedAt: "2026-09-27T10:00:00Z",
-    closedClaimCount: 4, closedClaimsCheckedAt: "2026-09-27T10:00:00Z", surfaceManagementCheckedAt: "2026-09-27T10:00:01Z", withdrawalsCheckedAt: "2026-09-27T10:00:02Z"
+    closedClaimCount: 4, closedClaimsCheckedAt: "2026-09-27T10:00:00Z", surfaceManagementCheckedAt: "2026-09-27T10:00:01Z", withdrawalsCheckedAt: "2026-09-27T10:00:02Z", plssReference: "T1N R2W · Sec 6", plssCheckedAt: "2026-09-27T10:00:03Z"
   });
   const restored = parseResearchSnapshots(JSON.stringify([snapshot]))[0];
   assert.equal(restored.surfaceManagementCount, 2);
   assert.equal(restored.withdrawalCaseCount, 3);
   assert.equal(restored.closedClaimCount, 4);
   assert.equal(restored.withdrawalsCheckedAt, "2026-09-27T10:00:02Z");
+  assert.equal(restored.plssReference, "T1N R2W · Sec 6");
   assert.deepEqual(parseResearchSnapshots(JSON.stringify([{ ...snapshot, withdrawalCaseCount: 1001 }])), []);
   assert.deepEqual(parseResearchSnapshots(JSON.stringify([{ ...snapshot, surfaceManagementCheckedAt: "invalid" }])), []);
   assert.deepEqual(parseResearchSnapshots(JSON.stringify([{ ...snapshot, withdrawalsCheckedAt: null }])), []);
+  assert.deepEqual(parseResearchSnapshots(JSON.stringify([{ ...snapshot, plssCheckedAt: null }])), []);
 });
 test("marks legacy saved research completeness unknown and rejects altered values", () => {
   const legacy = createResearchSnapshot({ label: "Legacy", bounds: { west: -120, south: 38, east: -119, north: 39 }, activeClaimCount: 3, sourceCheckedAt: "2026-09-26T20:00:00.000Z" });
@@ -212,6 +230,7 @@ test("marks legacy saved research completeness unknown and rejects altered value
   assert.equal(restoredLegacy.surfaceManagementCount, null);
   assert.equal(restoredLegacy.closedClaimCount, null);
   assert.equal(restoredLegacy.withdrawalCaseCount, null);
+  assert.equal(restoredLegacy.plssReference, null);
   assert.deepEqual(parseResearchSnapshots(JSON.stringify([{ ...legacy, resultCompleteness: "complete-enough" }])), []);
 });
 test("ignores malformed persisted research data", () =>
