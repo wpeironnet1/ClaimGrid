@@ -315,6 +315,27 @@ export const washingtonWorkflow: StateWorkflow = {
   ]
 };
 
+export const stateWorkflowRoutes = {
+  AK: "/claim/alaska",
+  AZ: "/claim/arizona",
+  CA: "/claim/california",
+  CO: "/claim/colorado",
+  ID: "/claim/idaho",
+  MT: "/claim/montana",
+  NV: "/claim/nevada",
+  NM: "/claim/new-mexico",
+  OR: "/claim/oregon",
+  SD: "/claim/south-dakota",
+  UT: "/claim/utah",
+  WA: "/claim/washington",
+  WY: "/claim/wyoming"
+} as const;
+
+export function getStateWorkflowPath(state: string): string | null {
+  if (!Object.prototype.hasOwnProperty.call(stateWorkflowRoutes, state)) return null;
+  return stateWorkflowRoutes[state as keyof typeof stateWorkflowRoutes];
+}
+
 export function parseWorkflowProgress(raw: string | null, allowedIds: readonly string[]): string[] {
   if (!raw) return [];
   try {

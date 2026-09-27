@@ -1,6 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const { normalizePublicSiteOrigin, PUBLIC_SITE_PATHS } = require("../dist/site-discovery.js");
+const { stateWorkflowRoutes } = require("../dist/state-workflows.js");
 
 test("normalizes only path-free HTTPS production origins", () => {
   assert.equal(normalizePublicSiteOrigin("claimgrid.example"), "https://claimgrid.example");
@@ -21,4 +22,5 @@ test("public discovery routes never expose API endpoints", () => {
   assert.ok(PUBLIC_SITE_PATHS.includes("/documents/blm"));
   assert.equal(PUBLIC_SITE_PATHS.some(path => path.startsWith("/api/")), false);
   assert.equal(new Set(PUBLIC_SITE_PATHS).size, PUBLIC_SITE_PATHS.length);
+  assert.ok(Object.values(stateWorkflowRoutes).every(path => PUBLIC_SITE_PATHS.includes(path)));
 });

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
-import { createClaimDraft, parseClaimDraft, supportedStates, type ClaimDraft, type ClaimStage, type ClaimType } from "@claimgrid/core";
+import { createClaimDraft, getStateWorkflowPath, parseClaimDraft, supportedStates, type ClaimDraft, type ClaimStage, type ClaimType } from "@claimgrid/core";
 
 const STORAGE_KEY = "claimgrid.claim-draft.v1";
 
@@ -15,6 +15,7 @@ export default function ClaimIntake() {
   const [acknowledged, setAcknowledged] = useState(false);
   const [saved, setSaved] = useState<ClaimDraft | null>(null);
   const [error, setError] = useState("");
+  const workflowPath = saved ? getStateWorkflowPath(saved.state) : null;
 
   useEffect(() => {
     const draft = parseClaimDraft(localStorage.getItem(STORAGE_KEY));
@@ -62,19 +63,7 @@ export default function ClaimIntake() {
             <div className="statusBadge">{saved.stage === "research" ? "RESEARCH — NO RIGHTS CREATED" : "LOCATION DATE RECORDED"}</div>
             <dl><div><dt>Project</dt><dd>{saved.name}</dd></div><div><dt>Jurisdiction</dt><dd>{saved.county ? `${saved.county} County, ` : ""}{saved.state}</dd></div>{saved.federalRecordingDeadline && <div className="deadline"><dt>Federal 90-day deadline</dt><dd>{saved.federalRecordingDeadline}</dd></div>}</dl>
             {saved.federalRecordingDeadline && <p className="deadlineWarning"><b>Do not treat this as your first deadline.</b> State or county recording can be required sooner. Confirm the applicable rules immediately.</p>}
-            {saved.state === "NV" && <a className="workflowLink" href="/claim/nevada">Open Nevada verification checklist →</a>}
-            {saved.state === "AZ" && <a className="workflowLink" href="/claim/arizona">Open Arizona verification checklist →</a>}
-            {saved.state === "CA" && <a className="workflowLink" href="/claim/california">Open California verification checklist →</a>}
-            {saved.state === "OR" && <a className="workflowLink" href="/claim/oregon">Open Oregon verification checklist →</a>}
-            {saved.state === "UT" && <a className="workflowLink" href="/claim/utah">Open Utah verification checklist →</a>}
-            {saved.state === "CO" && <a className="workflowLink" href="/claim/colorado">Open Colorado verification checklist →</a>}
-            {saved.state === "ID" && <a className="workflowLink" href="/claim/idaho">Open Idaho verification checklist →</a>}
-            {saved.state === "MT" && <a className="workflowLink" href="/claim/montana">Open Montana verification checklist →</a>}
-            {saved.state === "WY" && <a className="workflowLink" href="/claim/wyoming">Open Wyoming verification checklist →</a>}
-            {saved.state === "NM" && <a className="workflowLink" href="/claim/new-mexico">Open New Mexico verification checklist →</a>}
-            {saved.state === "AK" && <a className="workflowLink" href="/claim/alaska">Open Alaska verification checklist →</a>}
-            {saved.state === "SD" && <a className="workflowLink" href="/claim/south-dakota">Open South Dakota verification checklist →</a>}
-            {saved.state === "WA" && <a className="workflowLink" href="/claim/washington">Open Washington verification checklist →</a>}
+            {workflowPath ? <a className="workflowLink" href={workflowPath}>Open {saved.state} source-reviewed verification checklist →</a> : <p className="deadlineWarning"><b>No source-reviewed {saved.state} guide is available yet.</b> Do not rely on this project draft or federal target alone. Confirm current state, county, land-manager, access, environmental, and surface-use requirements directly with every responsible authority before acting.</p>}
             {saved.stage === "located" && <a className="workflowLink" href="/documents/blm">Prepare BLM recording worksheet →</a>}
             {saved.federalRecordingDeadline && <a className="workflowLink" href="/deadlines">Open deadline tracker →</a>}
           </> : <ol><li>Save the jurisdiction and present stage.</li><li>Research official land and mineral records.</li><li>Verify conditions and monuments in the field.</li><li>Follow state, county, and BLM requirements.</li></ol>}
