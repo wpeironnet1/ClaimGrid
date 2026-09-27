@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { buildActiveClaimsQuery, sanitizeActiveClaimsGeoJson, validateResearchBounds } from "@claimgrid/core";
+import { buildActiveClaimsQuery, createBlmResultMetadata, createSafeServerErrorEvent, sanitizeActiveClaimsGeoJson, validateResearchBounds } from "@claimgrid/core";
 export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
@@ -7,15 +7,16 @@ export async function GET(request: NextRequest) {
   const validation = validateResearchBounds({ west: params.get("west") ?? "", south: params.get("south") ?? "", east: params.get("east") ?? "", north: params.get("north") ?? "" });
   if (!validation.ok) return NextResponse.json({ error: validation.error }, { status: 400 });
   try {
-    const response = await fetch(buildActiveClaimsQuery(validation.bounds), { headers: { Accept: "application/geo+json, application/json" }, next: { revalidate: 900 }, signal: AbortSignal.timeout(12_000) });
-    if (!response.ok) throw new Error(`BLM returned ${response.status}`);
+    const response = await fetch(buildActiveClaimsQuery(validation.bounds), { headers: { Accept: "application/geo+json, application/json" }, cache: "no-store", signal: AbortSignal.timeout(12_000) });
+    if (!response.ok) { const error = new Error(); error.name = "BlmUpstreamHttpError"; throw error; }
     const geojson: unknown = await response.json();
+    const retrievedAt = new Date().toISOString();
     const sanitized = sanitizeActiveClaimsGeoJson(geojson);
-    if (!sanitized.ok) throw new Error(sanitized.error);
+    if (!sanitized.ok) { const error = new Error(); error.name = "BlmPayloadValidationError"; throw error; }
     const collection = sanitized.collection;
-    return NextResponse.json({ type: "FeatureCollection", features: collection.features, metadata: { source: "U.S. Bureau of Land Management — MLRS Active Mining Claims", sourceUrl: "https://gis.blm.gov/nlsdb/rest/services/Mining_Claims/MiningClaims/MapServer/1", retrievedAt: new Date().toISOString(), resultLimit: 1000, exceededLimit: collection.exceededTransferLimit || collection.features.length === 1000, screeningOnly: true, warning: "A missing map feature does not establish that land is open to mineral entry. Verify land status, withdrawals, official records, and existing monuments on the ground." } }, { headers: { "Cache-Control": "public, s-maxage=900, stale-while-revalidate=3600" } });
+    return NextResponse.json({ type: "FeatureCollection", features: collection.features, metadata: createBlmResultMetadata(collection, retrievedAt) }, { headers: { "Cache-Control": "public, s-maxage=900, stale-while-revalidate=3600" } });
   } catch (error) {
-    console.error("BLM active claims request failed", error);
+    console.error(JSON.stringify(createSafeServerErrorEvent({ error, method: "GET", route: "/api/blm/active-claims", routeType: "route", release: process.env.VERCEL_GIT_COMMIT_SHA })));
     return NextResponse.json({ error: "The official BLM layer is temporarily unavailable. No availability conclusion can be drawn." }, { status: 502 });
   }
 }

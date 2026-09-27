@@ -26,6 +26,15 @@ export interface SanitizedClaimFeature {
   geometry: { type: "Polygon"; coordinates: number[][][] } | { type: "MultiPolygon"; coordinates: number[][][][] };
 }
 export interface SanitizedClaimCollection { type: "FeatureCollection"; features: SanitizedClaimFeature[]; exceededTransferLimit: boolean }
+export interface BlmResultMetadata {
+  source: "U.S. Bureau of Land Management â MLRS Active Mining Claims";
+  sourceUrl: typeof BLM_ACTIVE_CLAIMS_LAYER;
+  retrievedAt: string;
+  resultLimit: 1000;
+  exceededLimit: boolean;
+  screeningOnly: true;
+  warning: string;
+}
 export type ClaimsSanitization = { ok: true; collection: SanitizedClaimCollection } | { ok: false; error: string };
 const CLAIM_PROPERTY_ALLOWLIST = ["OBJECTID","CSE_NR","CSE_NAME","CSE_DISP","BLM_PROD","QLTY","RCRD_ACRS","GEO_STATE"] as const;
 const validPosition = (value: unknown): value is number[] => Array.isArray(value) && value.length >= 2 && Number.isFinite(value[0]) && Number.isFinite(value[1]) && value[0] >= -180 && value[0] <= 180 && value[1] >= -90 && value[1] <= 90;
@@ -61,6 +70,19 @@ export function sanitizeActiveClaimsGeoJson(input: unknown): ClaimsSanitization 
     features.push({ type: "Feature", ...(id === undefined ? {} : { id }), properties, geometry: geometry.type === "Polygon" ? { type: "Polygon", coordinates: geometry.coordinates as number[][][] } : { type: "MultiPolygon", coordinates: geometry.coordinates as number[][][][] } });
   }
   return { ok: true, collection: { type: "FeatureCollection", features, exceededTransferLimit: candidate.exceededTransferLimit === true } };
+}
+
+export function createBlmResultMetadata(collection: SanitizedClaimCollection, retrievedAt: string): BlmResultMetadata {
+  if (!Number.isFinite(Date.parse(retrievedAt))) throw new Error("The BLM retrieval timestamp is invalid.");
+  return {
+    source: "U.S. Bureau of Land Management â MLRS Active Mining Claims",
+    sourceUrl: BLM_ACTIVE_CLAIMS_LAYER,
+    retrievedAt,
+    resultLimit: 1000,
+    exceededLimit: collection.exceededTransferLimit || collection.features.length === 1000,
+    screeningOnly: true,
+    warning: "A missing map feature does not establish that land is open to mineral entry. Verify land status, withdrawals, official records, and existing monuments on the ground."
+  };
 }
 
 

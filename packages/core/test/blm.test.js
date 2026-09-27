@@ -3,6 +3,7 @@ const assert = require("node:assert/strict");
 const {
   assessBlmLayerMetadata,
   buildActiveClaimsQuery,
+  createBlmResultMetadata,
   describeSourceFreshness,
   sanitizeActiveClaimsGeoJson,
   summarizeClaimProperties,
@@ -93,6 +94,20 @@ test("builds a constrained GeoJSON query", () => {
   assert.equal(url.searchParams.get("f"), "geojson");
   assert.equal(url.searchParams.get("resultRecordCount"), "1000");
   assert.match(url.searchParams.get("outFields"), /QLTY/);
+});
+test("creates source metadata from the actual BLM retrieval time", () => {
+  const metadata = createBlmResultMetadata({ type: "FeatureCollection", features: [], exceededTransferLimit: false }, "2026-09-27T00:00:00.000Z");
+  assert.equal(metadata.retrievedAt, "2026-09-27T00:00:00.000Z");
+  assert.equal(metadata.exceededLimit, false);
+  assert.equal(metadata.screeningOnly, true);
+  assert.match(metadata.warning, /does not establish.*open to mineral entry/i);
+  assert.throws(() => createBlmResultMetadata({ type: "FeatureCollection", features: [], exceededTransferLimit: false }, "not-a-date"), /timestamp/i);
+});
+test("BLM result metadata reports both explicit and exact-cap truncation", () => {
+  const empty = { type: "FeatureCollection", features: [], exceededTransferLimit: true };
+  assert.equal(createBlmResultMetadata(empty, "2026-09-27T00:00:00.000Z").exceededLimit, true);
+  const capped = { type: "FeatureCollection", features: Array.from({ length: 1000 }, () => ({ type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [[[0,0],[1,0],[1,1],[0,0]]] } })), exceededTransferLimit: false };
+  assert.equal(createBlmResultMetadata(capped, "2026-09-27T00:00:00.000Z").exceededLimit, true);
 });
 test("creates an explicitly screening-only research snapshot", () => {
   const snapshot = createResearchSnapshot(
