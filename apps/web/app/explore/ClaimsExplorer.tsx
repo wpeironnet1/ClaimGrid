@@ -27,6 +27,7 @@ type Result = {
   features: Feature[];
   metadata: { retrievedAt: string; exceededLimit: boolean; warning: string };
 };
+type ClosedClaimsResult = { records: { caseNumber: string | null; name: string | null; disposition: string | null; product: string | null; dataQuality: string | null }[]; exceededLimit: boolean; metadata: { retrievedAt: string; warning: string } };
 type SourceHealth = {
   status: "operational" | "degraded" | "unavailable";
   checkedAt: string;
@@ -112,6 +113,8 @@ export default function ClaimsExplorer() {
   const [surfaceError, setSurfaceError] = useState("");
   const [withdrawals, setWithdrawals] = useState<WithdrawalsResult | null>(null);
   const [withdrawalsError, setWithdrawalsError] = useState("");
+  const [closedClaims, setClosedClaims] = useState<ClosedClaimsResult | null>(null);
+  const [closedClaimsError, setClosedClaimsError] = useState("");
   const [selectedFeatureIndex, setSelectedFeatureIndex] = useState<
     number | null
   >(null);
@@ -183,6 +186,12 @@ export default function ClaimsExplorer() {
       .catch(reason => { if (reason.name !== "AbortError") setWithdrawalsError(reason.message); });
     return () => controller.abort();
   }, [area]);
+  useEffect(() => {
+    const controller = new AbortController(); setClosedClaims(null); setClosedClaimsError("");
+    const query = new URLSearchParams({ west:String(area.west), south:String(area.south), east:String(area.east), north:String(area.north) });
+    fetch(`/api/blm/closed-claims?${query}`,{signal:controller.signal}).then(async response=>{if(!response.ok)throw new Error((await response.json()).error);return response.json();}).then(setClosedClaims).catch(reason=>{if(reason.name!=="AbortError")setClosedClaimsError(reason.message);});
+    return ()=>controller.abort();
+  },[area]);
   useEffect(() => {
     const controller = new AbortController();
     setSurfaceManagement(null);
@@ -296,10 +305,12 @@ export default function ClaimsExplorer() {
         north: area.north,
       },
       activeClaimCount: result.features.length,
+      closedClaimCount: closedClaims?.records.length ?? null,
       surfaceManagementCount: surfaceManagement?.records.length ?? null,
       withdrawalCaseCount: withdrawals?.records.length ?? null,
       resultCompleteness: result.metadata.exceededLimit ? "truncated" : "complete",
       sourceCheckedAt: result.metadata.retrievedAt,
+      closedClaimsCheckedAt: closedClaims?.metadata.retrievedAt ?? null,
       surfaceManagementCheckedAt: surfaceManagement?.metadata.retrievedAt ?? null,
       withdrawalsCheckedAt: withdrawals?.metadata.retrievedAt ?? null,
     });
@@ -562,6 +573,14 @@ export default function ClaimsExplorer() {
               <small>Checked {new Date(withdrawals.metadata.retrievedAt).toLocaleString()}</small>
             </>}
           </section>
+          <section className="claimDetail" aria-live="polite">
+            <b>Closed-claim history</b>
+            {closedClaimsError ? <p>{closedClaimsError}</p> : !closedClaims ? <p>Checking the official BLM closed-claims layer…</p> : <>
+              <p>{closedClaims.records.length ? `${closedClaims.records.length}${closedClaims.exceededLimit ? "+" : ""} mapped closed claim records intersect this view.` : "No mapped closed claim records were returned. Unmapped records may still exist."}</p>
+              {closedClaims.records.slice(0,5).map((record,index)=><small key={`${record.caseNumber}-${index}`}>{record.name??record.caseNumber??"Unnamed closed record"}{record.disposition?` · ${record.disposition}`:""}{record.dataQuality?` · quality ${record.dataQuality}`:""}</small>)}
+              <p>{closedClaims.metadata.warning}</p><small>Checked {new Date(closedClaims.metadata.retrievedAt).toLocaleString()}</small>
+            </>}
+          </section>
           <a
             className="darkButton explorerButton"
             href="https://mlrs.blm.gov/s/"
@@ -593,6 +612,7 @@ export default function ClaimsExplorer() {
                     {new Date(item.sourceCheckedAt).toLocaleString()}
                   </span>
                   <span>Surface management: {item.surfaceManagementCount === null ? "not captured" : `${item.surfaceManagementCount} records • checked ${new Date(item.surfaceManagementCheckedAt!).toLocaleString()}`}</span>
+                  <span>Closed-claim history: {item.closedClaimCount === null ? "not captured" : `${item.closedClaimCount} records • checked ${new Date(item.closedClaimsCheckedAt!).toLocaleString()}`}</span>
                   <span>Withdrawal cases: {item.withdrawalCaseCount === null ? "not captured" : `${item.withdrawalCaseCount} records • checked ${new Date(item.withdrawalsCheckedAt!).toLocaleString()}`}</span>
                   {item.resultCompleteness === "truncated" && <small>Result cap reached — reload a smaller area for a complete count.</small>}
                   <small className={`evidenceAge ${describeEvidenceAge(item.sourceCheckedAt)}`}>{ageLabel(item.sourceCheckedAt)}</small>

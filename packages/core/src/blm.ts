@@ -1,4 +1,5 @@
 export const BLM_ACTIVE_CLAIMS_LAYER = "https://gis.blm.gov/nlsdb/rest/services/Mining_Claims/MiningClaims/MapServer/1";
+export const BLM_CLOSED_CLAIMS_LAYER = "https://gis.blm.gov/nlsdb/rest/services/Mining_Claims/MiningClaims/MapServer/2";
 export const BLM_SURFACE_MANAGEMENT_LAYER = "https://gis.blm.gov/arcgis/rest/services/lands/BLM_Natl_SMA_LimitedScale/MapServer/1";
 export const BLM_WITHDRAWALS_SERVICE = "https://gis.blm.gov/nlsdb/rest/services/Land_Tenure/Withdrawals_Case_Disp/MapServer";
 export type Bounds = { west: number; south: number; east: number; north: number };
@@ -18,6 +19,31 @@ export function buildActiveClaimsQuery(bounds: Bounds): URL {
   const url = new URL(`${BLM_ACTIVE_CLAIMS_LAYER}/query`);
   url.search = new URLSearchParams({ where: "1=1", geometry: `${bounds.west},${bounds.south},${bounds.east},${bounds.north}`, geometryType: "esriGeometryEnvelope", inSR: "4326", spatialRel: "esriSpatialRelIntersects", outFields: "OBJECTID,CSE_NR,CSE_NAME,CSE_DISP,BLM_PROD,QLTY,RCRD_ACRS,GEO_STATE", returnGeometry: "true", outSR: "4326", resultRecordCount: "1000", f: "geojson" }).toString();
   return url;
+}
+
+export function buildClosedClaimsQuery(bounds: Bounds): URL {
+  const url = new URL(`${BLM_CLOSED_CLAIMS_LAYER}/query`);
+  url.search = new URLSearchParams({ where: "1=1", geometry: `${bounds.west},${bounds.south},${bounds.east},${bounds.north}`, geometryType: "esriGeometryEnvelope", inSR: "4326", spatialRel: "esriSpatialRelIntersects", outFields: "CSE_NR,CSE_NAME,CSE_DISP,BLM_PROD,QLTY,RCRD_ACRS,GEO_STATE,MC_PATENTED,MC_EXCLUDED,MC_CONVEYED", returnGeometry: "false", resultRecordCount: "500", f: "json" }).toString();
+  return url;
+}
+
+export interface ClosedClaimRecord { caseNumber: string | null; name: string | null; disposition: string | null; product: string | null; dataQuality: string | null; recordedAcres: number | null; state: string | null; patented: string | null; excluded: string | null; conveyed: string | null }
+
+export function sanitizeClosedClaimsResponse(value: unknown): { records: ClosedClaimRecord[]; exceededLimit: boolean } | null {
+  if (!value || typeof value !== "object") return null;
+  const response = value as { features?: unknown; exceededTransferLimit?: unknown; error?: unknown };
+  if (response.error || !Array.isArray(response.features) || response.features.length > 500) return null;
+  const records: ClosedClaimRecord[] = []; const seen = new Set<string>();
+  for (const feature of response.features) {
+    if (!feature || typeof feature !== "object") return null;
+    const attributes = (feature as { attributes?: unknown }).attributes;
+    if (!attributes || typeof attributes !== "object") return null;
+    const source = attributes as Record<string, unknown>;
+    const acres = typeof source.RCRD_ACRS === "number" && Number.isFinite(source.RCRD_ACRS) && source.RCRD_ACRS >= 0 ? source.RCRD_ACRS : null;
+    const record = { caseNumber: boundedText(source.CSE_NR,255), name: boundedText(source.CSE_NAME,255), disposition: boundedText(source.CSE_DISP,255), product: boundedText(source.BLM_PROD,255), dataQuality: boundedText(source.QLTY,255), recordedAcres: acres, state: boundedText(source.GEO_STATE,2), patented: boundedText(source.MC_PATENTED,1), excluded: boundedText(source.MC_EXCLUDED,1), conveyed: boundedText(source.MC_CONVEYED,1) };
+    const key = record.caseNumber ?? JSON.stringify(record); if (!seen.has(key)) { seen.add(key); records.push(record); }
+  }
+  return { records, exceededLimit: response.exceededTransferLimit === true || response.features.length === 500 };
 }
 
 export function buildSurfaceManagementQuery(bounds: Bounds): URL {

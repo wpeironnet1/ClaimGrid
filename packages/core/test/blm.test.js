@@ -4,11 +4,13 @@ const {
   assessBlmLayerMetadata,
   assessArcGisLayerMetadata,
   buildActiveClaimsQuery,
+  buildClosedClaimsQuery,
   buildSurfaceManagementQuery,
   buildWithdrawalsQuery,
   createBlmResultMetadata,
   describeSourceFreshness,
   sanitizeActiveClaimsGeoJson,
+  sanitizeClosedClaimsResponse,
   sanitizeSurfaceManagementResponse,
   sanitizeWithdrawalResponse,
   summarizeClaimProperties,
@@ -109,6 +111,13 @@ test("builds a constrained GeoJSON query", () => {
   assert.equal(url.searchParams.get("resultRecordCount"), "1000");
   assert.match(url.searchParams.get("outFields"), /QLTY/);
 });
+test("queries and sanitizes closed claims as non-geometric history", () => {
+  const query=buildClosedClaimsQuery({west:-120,south:38,east:-119,north:39});
+  assert.match(query.pathname,/MapServer\/2\/query$/); assert.equal(query.searchParams.get("returnGeometry"),"false");
+  const summary=sanitizeClosedClaimsResponse({features:[{attributes:{CSE_NR:"NMC-1",CSE_NAME:"Old claim",CSE_DISP:"Closed",BLM_PROD:"Lode",QLTY:"2",RCRD_ACRS:20,GEO_STATE:"NM",MC_PATENTED:"N",SECRET:"drop"}},{attributes:{CSE_NR:"NMC-1",CSE_NAME:"Duplicate"}}]});
+  assert.equal(summary.records.length,1); assert.equal(summary.records[0].disposition,"Closed"); assert.equal(summary.records[0].recordedAcres,20);
+  assert.equal(sanitizeClosedClaimsResponse({error:{message:"failure"}}),null);
+});
 test("builds a bounded non-geometric surface-management query", () => {
   const url = buildSurfaceManagementQuery({ west: -120, south: 38, east: -119, north: 39 });
   assert.equal(url.searchParams.get("returnGeometry"), "false");
@@ -184,11 +193,12 @@ test("saved research preserves independent official-source evidence", () => {
   const snapshot = createResearchSnapshot({
     label: "Multi-source area", bounds: { west: -120, south: 38, east: -119, north: 39 }, activeClaimCount: 8,
     surfaceManagementCount: 2, withdrawalCaseCount: 3, sourceCheckedAt: "2026-09-27T10:00:00Z",
-    surfaceManagementCheckedAt: "2026-09-27T10:00:01Z", withdrawalsCheckedAt: "2026-09-27T10:00:02Z"
+    closedClaimCount: 4, closedClaimsCheckedAt: "2026-09-27T10:00:00Z", surfaceManagementCheckedAt: "2026-09-27T10:00:01Z", withdrawalsCheckedAt: "2026-09-27T10:00:02Z"
   });
   const restored = parseResearchSnapshots(JSON.stringify([snapshot]))[0];
   assert.equal(restored.surfaceManagementCount, 2);
   assert.equal(restored.withdrawalCaseCount, 3);
+  assert.equal(restored.closedClaimCount, 4);
   assert.equal(restored.withdrawalsCheckedAt, "2026-09-27T10:00:02Z");
   assert.deepEqual(parseResearchSnapshots(JSON.stringify([{ ...snapshot, withdrawalCaseCount: 1001 }])), []);
   assert.deepEqual(parseResearchSnapshots(JSON.stringify([{ ...snapshot, surfaceManagementCheckedAt: "invalid" }])), []);
@@ -200,6 +210,7 @@ test("marks legacy saved research completeness unknown and rejects altered value
   const restoredLegacy = parseResearchSnapshots(JSON.stringify([withoutCompleteness]))[0];
   assert.equal(restoredLegacy.resultCompleteness, "unknown");
   assert.equal(restoredLegacy.surfaceManagementCount, null);
+  assert.equal(restoredLegacy.closedClaimCount, null);
   assert.equal(restoredLegacy.withdrawalCaseCount, null);
   assert.deepEqual(parseResearchSnapshots(JSON.stringify([{ ...legacy, resultCompleteness: "complete-enough" }])), []);
 });

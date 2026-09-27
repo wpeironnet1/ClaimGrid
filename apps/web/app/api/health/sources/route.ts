@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { assessArcGisLayerMetadata, BLM_ACTIVE_CLAIMS_LAYER, BLM_SURFACE_MANAGEMENT_LAYER, BLM_WITHDRAWALS_SERVICE, createSafeServerErrorEvent } from "@claimgrid/core";
+import { assessArcGisLayerMetadata, BLM_ACTIVE_CLAIMS_LAYER, BLM_CLOSED_CLAIMS_LAYER, BLM_SURFACE_MANAGEMENT_LAYER, BLM_WITHDRAWALS_SERVICE, createSafeServerErrorEvent } from "@claimgrid/core";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -9,6 +9,7 @@ export async function GET(){
   try{
     const definitions = [
       { id: "active-claims", source: "MLRS Active Mining Claims", sourceUrl: BLM_ACTIVE_CLAIMS_LAYER, layerName: "Active Mining Claims", requiredFields: ["OBJECTID","CSE_NR","CSE_NAME","CSE_DISP","BLM_PROD","QLTY","RCRD_ACRS","GEO_STATE"] },
+      { id: "closed-claims", source: "MLRS Closed Mining Claims", sourceUrl: BLM_CLOSED_CLAIMS_LAYER, layerName: "Closed Mining Claims", requiredFields: ["OBJECTID","CSE_NR","CSE_NAME","CSE_DISP","BLM_PROD","QLTY","RCRD_ACRS","GEO_STATE","MC_PATENTED","MC_EXCLUDED","MC_CONVEYED"] },
       { id: "surface-management", source: "Surface Management Agency", sourceUrl: BLM_SURFACE_MANAGEMENT_LAYER, layerName: "Surface Management Agency", requiredFields: ["ADMIN_AGENCY_CODE","ADMIN_UNIT_NAME","ADMIN_UNIT_TYPE","ADMIN_ST"] },
       { id: "withdrawals-authorized", source: "MLRS Withdrawals — Authorized/Interim", sourceUrl: `${BLM_WITHDRAWALS_SERVICE}/0`, layerName: "Authorized/Interim", requiredFields: ["CSE_NR","CSE_NAME","CSE_DISP","SEG_MIN","SEG_SUR","QLTY","GEO_STATE"] },
       { id: "withdrawals-pending", source: "MLRS Withdrawals — Pending", sourceUrl: `${BLM_WITHDRAWALS_SERVICE}/1`, layerName: "Pending", requiredFields: ["CSE_NR","CSE_NAME","CSE_DISP","SEG_MIN","SEG_SUR","QLTY","GEO_STATE"] },
