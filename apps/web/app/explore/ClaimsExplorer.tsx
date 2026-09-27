@@ -6,7 +6,6 @@ import {
   createClaimBookmark,
   createResearchSnapshot,
   describeEvidenceAge,
-  describeSourceFreshness,
   parseClaimBookmarks,
   parseResearchSnapshots,
   RESEARCH_STORAGE_VERSION,
@@ -32,9 +31,16 @@ type SourceHealth = {
   status: "operational" | "degraded" | "unavailable";
   checkedAt: string;
   schemaCompatible: boolean;
-  upstreamLastEditedAt?: string | null;
   issues: string[];
   freshnessCaveat: string;
+  sources?: {
+    id: string;
+    source: string;
+    status: "operational" | "degraded" | "unavailable";
+    schemaCompatible: boolean;
+    upstreamLastEditedAt: string | null;
+    issues: string[];
+  }[];
 };
 type SurfaceManagementResult = {
   records: { agencyCode: string | null; unitName: string | null; unitType: string | null; state: string | null }[];
@@ -313,13 +319,6 @@ export default function ClaimsExplorer() {
     return age==="same-day"?"Checked within 24 hours":age==="recheck"?"Recheck before relying on it":age==="stale"?"Stale — rerun required":"Timestamp needs verification";
   }
 
-  const freshness = sourceHealth
-    ? describeSourceFreshness(
-        sourceHealth.upstreamLastEditedAt ?? null,
-        sourceHealth.checkedAt,
-      )
-    : "unknown";
-
   return (
     <>
       <section
@@ -332,10 +331,10 @@ export default function ClaimsExplorer() {
             {!sourceHealth
               ? "Checking BLM service…"
               : sourceHealth.status === "operational"
-                ? "BLM layer schema operational"
+                ? "All BLM map sources operational"
                 : sourceHealth.status === "degraded"
-                  ? "BLM layer schema changed"
-                  : "BLM source unavailable"}
+                  ? "Some BLM map sources need attention"
+                  : "BLM map sources unavailable"}
           </b>
         </div>
         {sourceHealth && (
@@ -345,15 +344,14 @@ export default function ClaimsExplorer() {
                 <dt>Health checked</dt>
                 <dd>{new Date(sourceHealth.checkedAt).toLocaleString()}</dd>
               </div>
-              <div>
-                <dt>Upstream edit marker</dt>
-                <dd>
-                  {sourceHealth.upstreamLastEditedAt
-                    ? `${new Date(sourceHealth.upstreamLastEditedAt).toLocaleString()} (${freshness === "recent-edit" ? "within 7 days" : freshness === "older-edit" ? "older than 7 days" : "age unverified"})`
-                    : "Not provided by BLM"}
-                </dd>
-              </div>
+              <div><dt>Dependencies</dt><dd>{sourceHealth.sources?.length ?? 1} official layer{sourceHealth.sources?.length === 1 ? "" : "s"}</dd></div>
             </dl>
+            {sourceHealth.sources?.length ? <ul className="sourceHealthList" aria-label="Official BLM source health details">
+              {sourceHealth.sources.map(source => <li key={source.id} className={source.status}>
+                <span><b>{source.source}</b><small>{source.status === "operational" ? "Operational" : source.status === "degraded" ? "Schema changed" : "Unavailable"}</small></span>
+                <small>{source.issues.length ? source.issues.join(" ") : source.upstreamLastEditedAt ? `Upstream edit marker ${new Date(source.upstreamLastEditedAt).toLocaleString()}` : "Schema verified; no edit marker provided."}</small>
+              </li>)}
+            </ul> : null}
             <p>
               {sourceHealth.issues.length
                 ? sourceHealth.issues.join(" ")
