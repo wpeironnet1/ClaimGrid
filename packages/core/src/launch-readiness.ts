@@ -1,8 +1,9 @@
 import { billingConfiguration } from "./billing";
 import { normalizePublicSiteOrigin } from "./site-discovery";
+import { accountDeletionConfiguration } from "./account-lifecycle";
 
 export interface LaunchReadinessCheck {
-  id: "canonical-origin" | "billing" | "accounts" | "release-traceability";
+  id: "canonical-origin" | "billing" | "accounts" | "account-deletion" | "release-traceability";
   status: "ready" | "action-required";
   summary: string;
 }
@@ -16,11 +17,13 @@ export function assessLaunchReadiness(environment: Record<string, string | undef
   ) !== null;
   const billingReady = billingConfiguration(environment).ready;
   const accountsReady = billingConfiguration(environment).accountConfigured;
+  const accountDeletionReady = accountDeletionConfiguration(environment).ready;
   const releaseReady = typeof environment.VERCEL_GIT_COMMIT_SHA === "string" && /^[a-f0-9]{7,64}$/i.test(environment.VERCEL_GIT_COMMIT_SHA);
   const checks: LaunchReadinessCheck[] = [
     { id: "canonical-origin", status: originReady ? "ready" : "action-required", summary: originReady ? "A validated HTTPS production origin is configured." : "Configure NEXT_PUBLIC_SITE_URL or a Vercel production URL." },
     { id: "billing", status: billingReady ? "ready" : "action-required", summary: billingReady ? "Stripe checkout, webhook verification, prices, and entitlement fulfillment are configured." : "Stripe credentials, both price IDs, webhook signing, and durable entitlement fulfillment are required before paid access." },
     { id: "accounts", status: accountsReady ? "ready" : "action-required", summary: accountsReady ? "Checkout can verify an authenticated account through the configured server-side session service." : "Connect a server-side account session verifier before checkout can accept payment." },
+    { id: "account-deletion", status: accountDeletionReady ? "ready" : "action-required", summary: accountDeletionReady ? "Authenticated account and personal-data deletion is connected to a dedicated server-side service." : "Connect a durable account-deletion service before cloud accounts launch." },
     { id: "release-traceability", status: releaseReady ? "ready" : "action-required", summary: releaseReady ? "Deployment errors can be correlated to a release commit." : "Expose the deployment commit SHA for release-level monitoring." }
   ];
   return { status: checks.every(check => check.status === "ready") ? "ready" : "action-required", checks };
