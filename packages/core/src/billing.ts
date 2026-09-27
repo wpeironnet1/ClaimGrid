@@ -113,3 +113,66 @@ export function isStripeFulfillmentEventSafe(event: StripeWebhookEnvelope, secre
   const expectedObject = fulfillmentObjectTypes[event.type];
   return typeof expectedObject === "string" && event.objectType === expectedObject;
 }
+
+export interface StripeEntitlementDelivery {
+  schemaVersion: 1;
+  eventId: string;
+  eventType: string;
+  livemode: boolean;
+  created: number;
+  accountId: string;
+  customerId: string | null;
+  subscriptionId: string | null;
+  subscriptionStatus: string | null;
+}
+
+function safeStripeId(value: unknown, prefix: "cus" | "sub"): string | null {
+  return typeof value === "string" && new RegExp(`^${prefix}_[A-Za-z0-9]{1,240}$`).test(value) ? value : null;
+}
+
+function safeAccountId(value: unknown): string | null {
+  return typeof value === "string" && /^[A-Za-z0-9_-]{8,128}$/.test(value) ? value : null;
+}
+
+function metadataAccountId(value: unknown): string | null {
+  if (!value || typeof value !== "object") return null;
+  return safeAccountId((value as { claimgrid_account_id?: unknown }).claimgrid_account_id);
+}
+
+const subscriptionStatuses = new Set(["incomplete", "incomplete_expired", "trialing", "active", "past_due", "canceled", "unpaid", "paused"]);
+
+export function createStripeEntitlementDelivery(value: unknown, secretKey: unknown): StripeEntitlementDelivery | null {
+  const envelope = parseStripeWebhookEnvelope(value);
+  if (!envelope || !fulfilledStripeEventTypes.has(envelope.type) || !isStripeFulfillmentEventSafe(envelope, secretKey)) return null;
+  const object = ((value as { data: { object: Record<string, unknown> } }).data.object);
+  let accountId: string | null = null;
+  let customerId = safeStripeId(object.customer, "cus");
+  let subscriptionId = safeStripeId(object.subscription, "sub");
+  let subscriptionStatus: string | null = null;
+
+  if (envelope.objectType === "checkout.session") {
+    const reference = safeAccountId(object.client_reference_id);
+    const metadata = metadataAccountId(object.metadata);
+    if (!reference || reference !== metadata) return null;
+    accountId = reference;
+  } else if (envelope.objectType === "subscription") {
+    accountId = metadataAccountId(object.metadata);
+    subscriptionId = safeStripeId(object.id, "sub");
+    subscriptionStatus = typeof object.status === "string" && subscriptionStatuses.has(object.status) ? object.status : null;
+    if (!subscriptionId || !subscriptionStatus) return null;
+  } else {
+    const parent = object.parent && typeof object.parent === "object" ? object.parent as { subscription_details?: unknown } : null;
+    const details = parent?.subscription_details && typeof parent.subscription_details === "object" ? parent.subscription_details as { subscription?: unknown; metadata?: unknown } : null;
+    accountId = metadataAccountId(details?.metadata ?? object.metadata);
+    subscriptionId = subscriptionId ?? safeStripeId(details?.subscription, "sub");
+  }
+
+  if (!accountId || !customerId || !subscriptionId) return null;
+  return { schemaVersion: 1, eventId: envelope.id, eventType: envelope.type, livemode: envelope.livemode, created: envelope.created, accountId, customerId, subscriptionId, subscriptionStatus };
+}
+
+export function isEntitlementDeliveryAcknowledged(value: unknown, eventId: string): boolean {
+  if (!value || typeof value !== "object") return false;
+  const acknowledgment = value as { eventId?: unknown; result?: unknown };
+  return acknowledgment.eventId === eventId && (acknowledgment.result === "applied" || acknowledgment.result === "duplicate");
+}

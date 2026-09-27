@@ -68,6 +68,8 @@ const {
 } = require("../dist/local-data.js");
 const {
   billingConfiguration,
+  createStripeEntitlementDelivery,
+  isEntitlementDeliveryAcknowledged,
   isStripeFulfillmentEventSafe,
   parseAccountSessionToken,
   parseBillingPlan,
@@ -999,6 +1001,49 @@ test("Stripe entitlement events fail closed for malformed or incomplete payloads
   const unsupported = parseStripeWebhookEnvelope({ id: "evt_other", type: "customer.created", livemode: false, created: 1, data: { object: { object: "customer" } } });
   assert.ok(unsupported);
   assert.equal(isStripeFulfillmentEventSafe(unsupported, "sk_test_valid123"), false);
+});
+
+test("Stripe fulfillment emits only a minimal account-bound entitlement event", () => {
+  const delivery = createStripeEntitlementDelivery({
+    id: "evt_checkout123",
+    type: "checkout.session.completed",
+    livemode: true,
+    created: 1789430400,
+    data: { object: {
+      object: "checkout.session",
+      client_reference_id: "account_12345",
+      customer: "cus_customer123",
+      subscription: "sub_subscription123",
+      customer_details: { name: "Private Name", address: { line1: "Private" } },
+      metadata: { claimgrid_account_id: "account_12345", unrelated: "discard me" },
+    } },
+  }, "sk_live_valid123");
+  assert.deepEqual(delivery, {
+    schemaVersion: 1,
+    eventId: "evt_checkout123",
+    eventType: "checkout.session.completed",
+    livemode: true,
+    created: 1789430400,
+    accountId: "account_12345",
+    customerId: "cus_customer123",
+    subscriptionId: "sub_subscription123",
+    subscriptionStatus: null,
+  });
+  assert.equal(JSON.stringify(delivery).includes("Private"), false);
+  assert.equal(createStripeEntitlementDelivery({
+    id: "evt_mismatch",
+    type: "checkout.session.completed",
+    livemode: true,
+    created: 1789430400,
+    data: { object: { object: "checkout.session", client_reference_id: "account_12345", customer: "cus_customer123", subscription: "sub_subscription123", metadata: { claimgrid_account_id: "account_99999" } } },
+  }, "sk_live_valid123"), null);
+});
+
+test("entitlement storage must explicitly acknowledge the same event", () => {
+  assert.equal(isEntitlementDeliveryAcknowledged({ eventId: "evt_123", result: "applied" }, "evt_123"), true);
+  assert.equal(isEntitlementDeliveryAcknowledged({ eventId: "evt_123", result: "duplicate" }, "evt_123"), true);
+  assert.equal(isEntitlementDeliveryAcknowledged({ eventId: "evt_other", result: "applied" }, "evt_123"), false);
+  assert.equal(isEntitlementDeliveryAcknowledged({ eventId: "evt_123", result: "ok" }, "evt_123"), false);
 });
 
 test("summarizes only supported BLM claim details", () => {

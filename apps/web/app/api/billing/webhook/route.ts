@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { fulfilledStripeEventTypes, isStripeFulfillmentEventSafe, parseStripeSignatureHeader, parseStripeWebhookEnvelope } from "@claimgrid/core";
+import { createStripeEntitlementDelivery, fulfilledStripeEventTypes, isEntitlementDeliveryAcknowledged, parseStripeSignatureHeader, parseStripeWebhookEnvelope } from "@claimgrid/core";
 import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -28,13 +28,15 @@ export async function POST(request: NextRequest) {
   const event=parseStripeWebhookEnvelope(parsed);
   if (!event) return NextResponse.json({error:"Invalid event shape."},{status:400});
   if (!fulfilledStripeEventTypes.has(event.type)) return NextResponse.json({received:true,handled:false});
-  if (!isStripeFulfillmentEventSafe(event,process.env.STRIPE_SECRET_KEY)) return NextResponse.json({error:"Event does not match the configured Stripe environment."},{status:400});
+  const delivery=createStripeEntitlementDelivery(parsed,process.env.STRIPE_SECRET_KEY);
+  if (!delivery) return NextResponse.json({error:"Event is not safely bound to a ClaimGrid account and Stripe environment."},{status:400});
   const destination=process.env.CLAIMGRID_ENTITLEMENT_STORE_URL;
   const token=process.env.CLAIMGRID_ENTITLEMENT_STORE_TOKEN;
   if (!destination || !destination.startsWith("https://") || !token || token.length<32) return NextResponse.json({error:"Durable entitlement fulfillment is unavailable; Stripe should retry."},{status:503});
   try {
-    const response=await fetch(destination,{method:"POST",headers:{"Authorization":`Bearer ${token}`,"Content-Type":"application/json","X-ClaimGrid-Stripe-Event":event.id},body:raw,cache:"no-store"});
-    if (!response.ok) throw new Error("Fulfillment rejected");
+    const response=await fetch(destination,{method:"POST",headers:{"Authorization":`Bearer ${token}`,"Content-Type":"application/json","X-ClaimGrid-Stripe-Event":event.id},body:JSON.stringify(delivery),cache:"no-store",signal:AbortSignal.timeout(5000)});
+    const acknowledgment=await response.text();
+    if (!response.ok || acknowledgment.length>8192 || !isEntitlementDeliveryAcknowledged(JSON.parse(acknowledgment),event.id)) throw new Error("Fulfillment rejected");
     return NextResponse.json({received:true,handled:true});
   } catch {
     return NextResponse.json({error:"Entitlement fulfillment failed; Stripe should retry."},{status:503});
