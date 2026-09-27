@@ -36,6 +36,11 @@ type SourceHealth = {
   issues: string[];
   freshnessCaveat: string;
 };
+type SurfaceManagementResult = {
+  records: { agencyCode: string | null; unitName: string | null; unitType: string | null; state: string | null }[];
+  exceededLimit: boolean;
+  metadata: { retrievedAt: string; warning: string };
+};
 const STORAGE_KEY = `claimgrid:research:v${RESEARCH_STORAGE_VERSION}`;
 const CLAIM_STORAGE_KEY = `claimgrid:claim-bookmarks:v${CLAIM_BOOKMARK_STORAGE_VERSION}`;
 const areas = [
@@ -92,6 +97,8 @@ export default function ClaimsExplorer() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [sourceHealth, setSourceHealth] = useState<SourceHealth | null>(null);
+  const [surfaceManagement, setSurfaceManagement] = useState<SurfaceManagementResult | null>(null);
+  const [surfaceError, setSurfaceError] = useState("");
   const [selectedFeatureIndex, setSelectedFeatureIndex] = useState<
     number | null
   >(null);
@@ -150,6 +157,17 @@ export default function ClaimsExplorer() {
         if (reason.name !== "AbortError") setError(reason.message);
       })
       .finally(() => setLoading(false));
+    return () => controller.abort();
+  }, [area]);
+  useEffect(() => {
+    const controller = new AbortController();
+    setSurfaceManagement(null);
+    setSurfaceError("");
+    const query = new URLSearchParams({ west: String(area.west), south: String(area.south), east: String(area.east), north: String(area.north) });
+    fetch(`/api/blm/surface-management?${query}`, { signal: controller.signal })
+      .then(async response => { if (!response.ok) throw new Error((await response.json()).error); return response.json(); })
+      .then(setSurfaceManagement)
+      .catch(reason => { if (reason.name !== "AbortError") setSurfaceError(reason.message); });
     return () => controller.abort();
   }, [area]);
 
@@ -274,7 +292,7 @@ export default function ClaimsExplorer() {
   }
   function ageLabel(sourceCheckedAt: string) {
     const age=describeEvidenceAge(sourceCheckedAt);
-    return age==="same-day"?"Checked within 24 hours":age==="recheck"?"Recheck before relying on it":age==="stale"?"Stale â rerun required":"Timestamp needs verification";
+    return age==="same-day"?"Checked within 24 hours":age==="recheck"?"Recheck before relying on it":age==="stale"?"Stale — rerun required":"Timestamp needs verification";
   }
 
   const freshness = sourceHealth
@@ -294,7 +312,7 @@ export default function ClaimsExplorer() {
           <span className="stepLabel">OFFICIAL SOURCE STATUS</span>
           <b>
             {!sourceHealth
-              ? "Checking BLM serviceâ¦"
+              ? "Checking BLM service…"
               : sourceHealth.status === "operational"
                 ? "BLM layer schema operational"
                 : sourceHealth.status === "degraded"
@@ -369,7 +387,7 @@ export default function ClaimsExplorer() {
               <g className="claimShapes">{paths}</g>
             </svg>
             {loading && (
-              <div className="mapStatus">Loading the current BLM layerâ¦</div>
+              <div className="mapStatus">Loading the current BLM layer…</div>
             )}
             {error && <div className="mapStatus error">{error}</div>}
             <div className="legend">
@@ -377,14 +395,14 @@ export default function ClaimsExplorer() {
                 <i />
                 Active claim geometry
               </span>
-              <span>BLM MLRS â¢ not an availability map</span>
+              <span>BLM MLRS • not an availability map</span>
             </div>
           </div>
           <form className="customBounds" onSubmit={applyCustomArea}>
             <div>
               <b>Research anywhere in the United States</b>
               <span>
-                Enter a bounded screening viewport no larger than 5Â° Ã 5Â°.
+                Enter a bounded screening viewport no larger than 5° × 5°.
               </span>
             </div>
             <label>
@@ -420,7 +438,7 @@ export default function ClaimsExplorer() {
         </section>
         <aside className="resultPanel">
           <span className="stepLabel">LIVE RESULTS</span>
-          <h1>{loading ? "â" : `${result?.features.length ?? 0}${result?.metadata.exceededLimit ? "+" : ""}`}</h1>
+          <h1>{loading ? "—" : `${result?.features.length ?? 0}${result?.metadata.exceededLimit ? "+" : ""}`}</h1>
           <h2>mapped active-claim records intersect this view</h2>
           <p>
             This count reflects geometries returned by the current BLM service,
@@ -439,7 +457,7 @@ export default function ClaimsExplorer() {
                   <dt>Result cap</dt>
                   <dd>
                     {result.metadata.exceededLimit
-                      ? "Reached â zoom in"
+                      ? "Reached — zoom in"
                       : "Not reached"}
                   </dd>
                 </div>
@@ -456,7 +474,7 @@ export default function ClaimsExplorer() {
                       onClick={() => setSelectedFeatureIndex(null)}
                       aria-label="Close selected claim details"
                     >
-                      Ã
+                      ×
                     </button>
                   </div>
                   <h3>{selectedClaim.claimName ?? "Unnamed record"}</h3>
@@ -504,13 +522,23 @@ export default function ClaimsExplorer() {
               </button>
             </>
           )}
+          <section className="claimDetail" aria-live="polite">
+            <b>Surface-management screening</b>
+            {surfaceError ? <p>{surfaceError}</p> : !surfaceManagement ? <p>Checking the official BLM surface-management layer…</p> : <>
+              <p>{surfaceManagement.records.length ? `${surfaceManagement.records.length}${surfaceManagement.exceededLimit ? "+" : ""} management unit records intersect this view.` : "No surface-management records were returned for this view."}</p>
+              {surfaceManagement.records.slice(0, 8).map((record, index) => <small key={`${record.agencyCode}-${record.unitName}-${index}`}>{record.unitName ?? record.agencyCode ?? "Unnamed management unit"}{record.unitType ? ` · ${record.unitType}` : ""}</small>)}
+              {surfaceManagement.records.length > 8 && <small>Plus {surfaceManagement.records.length - 8} additional records.</small>}
+              <p>{surfaceManagement.metadata.warning}</p>
+              <small>Checked {new Date(surfaceManagement.metadata.retrievedAt).toLocaleString()}</small>
+            </>}
+          </section>
           <a
             className="darkButton explorerButton"
             href="https://mlrs.blm.gov/s/"
             target="_blank"
             rel="noreferrer"
           >
-            Verify in BLM MLRS â
+            Verify in BLM MLRS ↗
           </a>
         </aside>
       </div>
@@ -532,10 +560,10 @@ export default function ClaimsExplorer() {
                 <div>
                   <b>{item.label}</b>
                   <span>
-                    {item.resultCompleteness === "truncated" ? "At least " : ""}{item.activeClaimCount} mapped records â¢ checked{" "}
+                    {item.resultCompleteness === "truncated" ? "At least " : ""}{item.activeClaimCount} mapped records • checked{" "}
                     {new Date(item.sourceCheckedAt).toLocaleString()}
                   </span>
-                  {item.resultCompleteness === "truncated" && <small>Result cap reached â reload a smaller area for a complete count.</small>}
+                  {item.resultCompleteness === "truncated" && <small>Result cap reached — reload a smaller area for a complete count.</small>}
                   <small className={`evidenceAge ${describeEvidenceAge(item.sourceCheckedAt)}`}>{ageLabel(item.sourceCheckedAt)}</small>
                 </div>
                 <div className="savedActions"><button onClick={()=>reopenSaved(item)} aria-label={`Reload ${item.label} and request current BLM data`}>Reload live data</button><button onClick={() => removeSaved(item.id)} aria-label={`Remove ${item.label}`}>Remove</button></div>
@@ -567,8 +595,8 @@ export default function ClaimsExplorer() {
                       "Unnamed BLM record"}
                   </b>
                   <span>
-                    {item.details.caseNumber ?? "No case number"} Â·{" "}
-                    {item.areaLabel} Â· checked{" "}
+                    {item.details.caseNumber ?? "No case number"} ·{" "}
+                    {item.areaLabel} · checked{" "}
                     {new Date(item.sourceCheckedAt).toLocaleString()}
                   </span>
                   <small className={`evidenceAge ${describeEvidenceAge(item.sourceCheckedAt)}`}>{ageLabel(item.sourceCheckedAt)}</small>

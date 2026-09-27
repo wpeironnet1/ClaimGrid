@@ -3,9 +3,11 @@ const assert = require("node:assert/strict");
 const {
   assessBlmLayerMetadata,
   buildActiveClaimsQuery,
+  buildSurfaceManagementQuery,
   createBlmResultMetadata,
   describeSourceFreshness,
   sanitizeActiveClaimsGeoJson,
+  sanitizeSurfaceManagementResponse,
   summarizeClaimProperties,
   validateResearchBounds,
 } = require("../dist/blm.js");
@@ -103,6 +105,21 @@ test("builds a constrained GeoJSON query", () => {
   assert.equal(url.searchParams.get("f"), "geojson");
   assert.equal(url.searchParams.get("resultRecordCount"), "1000");
   assert.match(url.searchParams.get("outFields"), /QLTY/);
+});
+test("builds a bounded non-geometric surface-management query", () => {
+  const url = buildSurfaceManagementQuery({ west: -120, south: 38, east: -119, north: 39 });
+  assert.equal(url.searchParams.get("returnGeometry"), "false");
+  assert.equal(url.searchParams.get("returnDistinctValues"), "true");
+  assert.equal(url.searchParams.get("resultRecordCount"), "200");
+  assert.match(url.searchParams.get("outFields"), /ADMIN_AGENCY_CODE/);
+});
+test("sanitizes surface-management records without treating them as land status", () => {
+  assert.deepEqual(sanitizeSurfaceManagementResponse({ features: [
+    { attributes: { ADMIN_AGENCY_CODE: "BLM", ADMIN_UNIT_NAME: "Example Field Office", ADMIN_UNIT_TYPE: "Field Office", ADMIN_ST: "NV", PRIVATE: "discard" } },
+    { attributes: { ADMIN_AGENCY_CODE: "BLM", ADMIN_UNIT_NAME: "Example Field Office", ADMIN_UNIT_TYPE: "Field Office", ADMIN_ST: "NV" } },
+  ] }), { records: [{ agencyCode: "BLM", unitName: "Example Field Office", unitType: "Field Office", state: "NV" }], exceededLimit: false });
+  assert.equal(sanitizeSurfaceManagementResponse({ error: { message: "upstream failure" } }), null);
+  assert.equal(sanitizeSurfaceManagementResponse({ features: [{ attributes: null }] }), null);
 });
 test("creates source metadata from the actual BLM retrieval time", () => {
   const metadata = createBlmResultMetadata({ type: "FeatureCollection", features: [], exceededTransferLimit: false }, "2026-09-27T00:00:00.000Z");

@@ -1,4 +1,5 @@
 export const BLM_ACTIVE_CLAIMS_LAYER = "https://gis.blm.gov/nlsdb/rest/services/Mining_Claims/MiningClaims/MapServer/1";
+export const BLM_SURFACE_MANAGEMENT_LAYER = "https://gis.blm.gov/arcgis/rest/services/lands/BLM_Natl_SMA_LimitedScale/MapServer/1";
 export type Bounds = { west: number; south: number; east: number; north: number };
 export type BoundsValidation = { ok: true; bounds: Bounds } | { ok: false; error: string };
 const US_LIMITS: Bounds = { west: -180, south: 18, east: 180, north: 72 };
@@ -18,6 +19,44 @@ export function buildActiveClaimsQuery(bounds: Bounds): URL {
   return url;
 }
 
+export function buildSurfaceManagementQuery(bounds: Bounds): URL {
+  const url = new URL(`${BLM_SURFACE_MANAGEMENT_LAYER}/query`);
+  url.search = new URLSearchParams({ where: "1=1", geometry: `${bounds.west},${bounds.south},${bounds.east},${bounds.north}`, geometryType: "esriGeometryEnvelope", inSR: "4326", spatialRel: "esriSpatialRelIntersects", outFields: "ADMIN_AGENCY_CODE,ADMIN_UNIT_NAME,ADMIN_UNIT_TYPE,ADMIN_ST", returnGeometry: "false", returnDistinctValues: "true", resultRecordCount: "200", f: "json" }).toString();
+  return url;
+}
+
+export interface SurfaceManagementRecord {
+  agencyCode: string | null;
+  unitName: string | null;
+  unitType: string | null;
+  state: string | null;
+}
+
+export interface SurfaceManagementSummary {
+  records: SurfaceManagementRecord[];
+  exceededLimit: boolean;
+}
+
+const boundedText = (value: unknown, maximum: number) => typeof value === "string" && value.trim() ? value.trim().slice(0, maximum) : null;
+
+export function sanitizeSurfaceManagementResponse(value: unknown): SurfaceManagementSummary | null {
+  if (!value || typeof value !== "object") return null;
+  const response = value as { features?: unknown; exceededTransferLimit?: unknown; error?: unknown };
+  if (response.error || !Array.isArray(response.features) || response.features.length > 200) return null;
+  const records: SurfaceManagementRecord[] = [];
+  const seen = new Set<string>();
+  for (const feature of response.features) {
+    if (!feature || typeof feature !== "object") return null;
+    const attributes = (feature as { attributes?: unknown }).attributes;
+    if (!attributes || typeof attributes !== "object") return null;
+    const source = attributes as Record<string, unknown>;
+    const record = { agencyCode: boundedText(source.ADMIN_AGENCY_CODE, 16), unitName: boundedText(source.ADMIN_UNIT_NAME, 255), unitType: boundedText(source.ADMIN_UNIT_TYPE, 255), state: boundedText(source.ADMIN_ST, 2) };
+    const key = JSON.stringify(record);
+    if (!seen.has(key)) { seen.add(key); records.push(record); }
+  }
+  return { records, exceededLimit: response.exceededTransferLimit === true || response.features.length === 200 };
+}
+
 
 export interface SanitizedClaimFeature {
   type: "Feature";
@@ -27,7 +66,7 @@ export interface SanitizedClaimFeature {
 }
 export interface SanitizedClaimCollection { type: "FeatureCollection"; features: SanitizedClaimFeature[]; exceededTransferLimit: boolean }
 export interface BlmResultMetadata {
-  source: "U.S. Bureau of Land Management â MLRS Active Mining Claims";
+  source: "U.S. Bureau of Land Management — MLRS Active Mining Claims";
   sourceUrl: typeof BLM_ACTIVE_CLAIMS_LAYER;
   retrievedAt: string;
   resultLimit: 1000;
@@ -75,7 +114,7 @@ export function sanitizeActiveClaimsGeoJson(input: unknown): ClaimsSanitization 
 export function createBlmResultMetadata(collection: SanitizedClaimCollection, retrievedAt: string): BlmResultMetadata {
   if (!Number.isFinite(Date.parse(retrievedAt))) throw new Error("The BLM retrieval timestamp is invalid.");
   return {
-    source: "U.S. Bureau of Land Management â MLRS Active Mining Claims",
+    source: "U.S. Bureau of Land Management — MLRS Active Mining Claims",
     sourceUrl: BLM_ACTIVE_CLAIMS_LAYER,
     retrievedAt,
     resultLimit: 1000,
