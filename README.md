@@ -30,6 +30,17 @@ For mobile:
 npm run dev:mobile
 ```
 
+## Vercel deployment
+
+ClaimGrid is an npm-workspace monorepo. The Vercel project must use the repository root as its Root Directory so the checked-in `vercel.json`, root lockfile, shared core package, and web workspace are all available during installation and build.
+
+- Framework preset: Next.js
+- Build command: `npm run build`
+- Output directory: `apps/web/.next`
+- Install command: use Vercel's default npm install behavior
+
+Do not set the project Root Directory to `apps/web` unless Vercel is also configured to include source files outside that directory; the web app imports `packages/core` through the root workspace.
+
 ## Initial roadmap
 
 1. Live BLM active-claim overlay and federal surface-management layers
@@ -47,4 +58,3 @@ npm run dev:mobile
 - BLM active mining claims ArcGIS layer: https://gis.blm.gov/nlsdb/rest/services/Mining_Claims/MiningClaims/MapServer/1
 
 ClaimGrid is not a law firm, title company, land surveyor, government agency, or substitute for professional advice.
-
