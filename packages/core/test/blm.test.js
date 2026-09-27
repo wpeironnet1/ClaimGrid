@@ -68,7 +68,9 @@ const {
 } = require("../dist/local-data.js");
 const {
   billingConfiguration,
+  isStripeFulfillmentEventSafe,
   parseBillingPlan,
+  parseStripeWebhookEnvelope,
   parseStripeSignatureHeader,
 } = require("../dist/billing.js");
 const {
@@ -951,6 +953,34 @@ test("parses Stripe signatures without accepting malformed digests", () => {
   );
   assert.equal(parseStripeSignatureHeader("t=bad,v1=short"), null);
   assert.equal(parseStripeSignatureHeader(null), null);
+});
+
+test("Stripe entitlement events require a valid envelope and object type", () => {
+  const event = parseStripeWebhookEnvelope({
+    id: "evt_valid123",
+    type: "checkout.session.completed",
+    livemode: true,
+    created: 1789430400,
+    data: { object: { object: "checkout.session" } },
+  });
+  assert.deepEqual(event, {
+    id: "evt_valid123",
+    type: "checkout.session.completed",
+    livemode: true,
+    created: 1789430400,
+    objectType: "checkout.session",
+  });
+  assert.equal(isStripeFulfillmentEventSafe(event, "sk_live_valid123"), true);
+  assert.equal(isStripeFulfillmentEventSafe(event, "sk_test_valid123"), false);
+  assert.equal(isStripeFulfillmentEventSafe({ ...event, objectType: "customer" }, "sk_live_valid123"), false);
+});
+
+test("Stripe entitlement events fail closed for malformed or incomplete payloads", () => {
+  assert.equal(parseStripeWebhookEnvelope({ id: "bad", type: "checkout.session.completed" }), null);
+  assert.equal(parseStripeWebhookEnvelope({ id: "evt_valid", type: "checkout.session.completed", livemode: true, created: 1, data: { object: {} } }), null);
+  const unsupported = parseStripeWebhookEnvelope({ id: "evt_other", type: "customer.created", livemode: false, created: 1, data: { object: { object: "customer" } } });
+  assert.ok(unsupported);
+  assert.equal(isStripeFulfillmentEventSafe(unsupported, "sk_test_valid123"), false);
 });
 
 test("summarizes only supported BLM claim details", () => {

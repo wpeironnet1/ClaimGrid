@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { fulfilledStripeEventTypes, parseStripeSignatureHeader } from "@claimgrid/core";
+import { fulfilledStripeEventTypes, isStripeFulfillmentEventSafe, parseStripeSignatureHeader, parseStripeWebhookEnvelope } from "@claimgrid/core";
 import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -23,10 +23,12 @@ export async function POST(request: NextRequest) {
   const expected=createHmac("sha256",secret).update(`${signature.timestamp}.${raw}`).digest("hex");
   if (!matchesSignature(expected,signature.signatures)) return NextResponse.json({error:"Invalid webhook signature."},{status:400});
 
-  let event: { id?: unknown; type?: unknown };
-  try { event=JSON.parse(raw); } catch { return NextResponse.json({error:"Invalid event body."},{status:400}); }
-  if (typeof event.id!=="string" || typeof event.type!=="string") return NextResponse.json({error:"Invalid event shape."},{status:400});
+  let parsed: unknown;
+  try { parsed=JSON.parse(raw); } catch { return NextResponse.json({error:"Invalid event body."},{status:400}); }
+  const event=parseStripeWebhookEnvelope(parsed);
+  if (!event) return NextResponse.json({error:"Invalid event shape."},{status:400});
   if (!fulfilledStripeEventTypes.has(event.type)) return NextResponse.json({received:true,handled:false});
+  if (!isStripeFulfillmentEventSafe(event,process.env.STRIPE_SECRET_KEY)) return NextResponse.json({error:"Event does not match the configured Stripe environment."},{status:400});
   const destination=process.env.CLAIMGRID_ENTITLEMENT_STORE_URL;
   const token=process.env.CLAIMGRID_ENTITLEMENT_STORE_TOKEN;
   if (!destination || !destination.startsWith("https://") || !token || token.length<32) return NextResponse.json({error:"Durable entitlement fulfillment is unavailable; Stripe should retry."},{status:503});
